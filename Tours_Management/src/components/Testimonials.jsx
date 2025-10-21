@@ -8,7 +8,7 @@ const testimonials = [
     location: 'New York, USA',
     rating: 5,
     image: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=3B82F6&color=fff&size=200',
-    text: 'The Paris tour was absolutely incredible! Every detail was perfectly planned, and our guide was knowledgeable and friendly. Highly recommend!',
+    text: 'The Sigiriya tour was absolutely incredible! Every detail was perfectly planned, and our guide was knowledgeable and friendly. Highly recommend!',
   },
   {
     id: 2,
@@ -16,7 +16,7 @@ const testimonials = [
     location: 'Singapore',
     rating: 5,
     image: 'https://ui-avatars.com/api/?name=Michael+Chen&background=8B5CF6&color=fff&size=200',
-    text: 'Best vacation ever! The Bali Paradise package exceeded all expectations. The accommodations were luxurious and the itinerary was perfect.',
+    text: 'Best vacation ever! The Kandy Cultural package exceeded all expectations. The accommodations were luxurious and the itinerary was perfect.',
   },
   {
     id: 3,
@@ -24,7 +24,7 @@ const testimonials = [
     location: 'London, UK',
     rating: 4,
     image: 'https://ui-avatars.com/api/?name=Emma+Williams&background=F59E0B&color=fff&size=200',
-    text: 'Amazing experience in Tokyo! The tour was well-organized, and we got to see both traditional and modern aspects of the city. Would definitely book again.',
+    text: 'Amazing experience in Colombo! The tour was well-organized, and we got to see both traditional and modern aspects of the city. Would definitely book again.',
   },
   {
     id: 4,
@@ -32,7 +32,7 @@ const testimonials = [
     location: 'Madrid, Spain',
     rating: 5,
     image: 'https://ui-avatars.com/api/?name=David+Rodriguez&background=10B981&color=fff&size=200',
-    text: 'The Greek Islands cruise was a dream come true! Beautiful scenery, delicious food, and wonderful company. TourHub made everything seamless.',
+    text: 'The Southern Coast tour was a dream come true! Beautiful scenery, delicious food, and wonderful company. TourHub made everything seamless.',
   },
 ];
 

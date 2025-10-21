@@ -1,4 +1,4 @@
-import { FaClock, FaMapMarkerAlt, FaShoppingCart, FaStar } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
@@ -68,8 +68,8 @@ const TourCard = ({ tour }) => {
           onClick={handleAddToCart}
           className="btn-primary w-full flex items-center justify-center space-x-2 mt-auto"
         >
-          <FaShoppingCart />
-          <span>Add to Cart</span>
+          <FaCalendarAlt />
+          <span>Book Now</span>
         </motion.button>
       </div>
     </motion.div>

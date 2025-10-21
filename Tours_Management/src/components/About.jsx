@@ -6,7 +6,7 @@ const About = () => {
   const stats = [
     { icon: FaGlobe, value: '150+', label: 'Destinations' },
     { icon: FaUsers, value: '50K+', label: 'Happy Travelers' },
-    { icon: FaAward, value: '25+', label: 'Awards Won' },
+    { icon: FaAward, value: '15+', label: 'Years Experience' },
     { icon: FaHeart, value: '98%', label: 'Satisfaction Rate' },
   ];
 

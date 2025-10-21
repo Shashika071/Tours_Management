@@ -15,10 +15,10 @@ const AllTours = () => {
           className="text-center mb-16"
         >
           <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-4">
-            All Tours & Destinations
+            Sri Lanka Tours & Destinations
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Discover our complete collection of amazing tours and destinations from around the world
+            Discover our complete collection of amazing Sri Lankan tours and destinations from Colombo to the ancient cities
           </p>
           <Link to="/" className="btn-outline inline-block">
             ← Back to Home
@@ -52,11 +52,11 @@ const AllTours = () => {
           className="mt-20 bg-white rounded-2xl shadow-xl p-8"
         >
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Why Choose Our Tours?</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-8">Why Choose Sri Lanka?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary mb-2">{tours.length}</div>
-                <div className="text-gray-600">Amazing Destinations</div>
+                <div className="text-gray-600">Sri Lankan Destinations</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-secondary mb-2">

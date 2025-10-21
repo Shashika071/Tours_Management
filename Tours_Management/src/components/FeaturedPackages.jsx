@@ -6,63 +6,63 @@ import { useCart } from '../context/CartContext';
 const featuredPackages = [
   {
     id: 101,
-    name: 'Romantic Paris Getaway',
-    location: 'Paris, France',
-    duration: '5 Days / 4 Nights',
-    price: 1199,
-    originalPrice: 1499,
-    discount: '20%',
+    name: 'Sigiriya Rock Fortress Adventure',
+    location: 'Sigiriya, Sri Lanka',
+    duration: '2 Days / 1 Night',
+    price: 299,
+    originalPrice: 399,
+    discount: '25%',
     rating: 4.9,
     reviews: 456,
-    image: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=800&q=80',
-    description: 'Experience the city of love with exclusive access to top attractions and romantic dining.',
-    badge: 'Hot Deal',
-    includes: ['Hotel', 'Flights', 'Tours', 'Meals'],
+    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=800&q=80',
+    description: 'Climb the ancient rock fortress, explore frescoes, and enjoy panoramic views of Sri Lanka.',
+    badge: 'UNESCO Site',
+    includes: ['Hotel', 'Guide', 'Entrance Fees', 'Meals'],
   },
   {
     id: 102,
-    name: 'Tropical Maldives Escape',
-    location: 'Maldives',
-    duration: '7 Days / 6 Nights',
-    price: 2299,
-    originalPrice: 2899,
-    discount: '21%',
+    name: 'Kandy Cultural Experience',
+    location: 'Kandy, Sri Lanka',
+    duration: '3 Days / 2 Nights',
+    price: 449,
+    originalPrice: 549,
+    discount: '18%',
     rating: 5.0,
     reviews: 678,
-    image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=800&q=80',
-    description: 'Luxury overwater villa with pristine beaches and world-class diving experiences.',
+    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80',
+    description: 'Visit the Temple of the Tooth, enjoy cultural shows, and explore the hill country.',
     badge: 'Best Seller',
-    includes: ['Villa', 'Flights', 'Spa', 'All Meals'],
+    includes: ['Hotel', 'Cultural Show', 'Temple Visit', 'All Meals'],
   },
   {
     id: 103,
-    name: 'Adventure New Zealand',
-    location: 'New Zealand',
-    duration: '10 Days / 9 Nights',
-    price: 2799,
-    originalPrice: 3499,
-    discount: '20%',
+    name: 'Yala Safari & Beach Paradise',
+    location: 'Yala, Sri Lanka',
+    duration: '4 Days / 3 Nights',
+    price: 699,
+    originalPrice: 899,
+    discount: '22%',
     rating: 4.8,
     reviews: 342,
-    image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=800&q=80',
-    description: 'Explore stunning landscapes, adventure sports, and unique wildlife experiences.',
-    badge: 'Adventure',
-    includes: ['Hotel', 'Transport', 'Activities', 'Guide'],
+    image: 'https://images.unsplash.com/photo-1544008230-ac1e1fb4f4f4?auto=format&fit=crop&w=800&q=80',
+    description: 'Safari adventures in Yala National Park and relaxation on pristine beaches.',
+    badge: 'Wildlife',
+    includes: ['Safari Jeep', 'Beach Resort', 'Guide', 'Meals'],
   },
   {
     id: 104,
-    name: 'Cultural Japan Tour',
-    location: 'Tokyo & Kyoto, Japan',
-    duration: '8 Days / 7 Nights',
-    price: 2499,
-    originalPrice: 3099,
-    discount: '19%',
+    name: 'Galle Fort & Southern Coast',
+    location: 'Galle, Sri Lanka',
+    duration: '3 Days / 2 Nights',
+    price: 399,
+    originalPrice: 499,
+    discount: '20%',
     rating: 4.9,
     reviews: 523,
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
-    description: 'Immerse in Japanese culture, visit temples, and enjoy authentic cuisine.',
-    badge: 'Cultural',
-    includes: ['Hotel', 'Rail Pass', 'Tours', 'Guide'],
+    image: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80',
+    description: 'Explore the historic Galle Fort, Dutch architecture, and beautiful coastal scenery.',
+    badge: 'Heritage',
+    includes: ['Heritage Hotel', 'Fort Tour', 'Boat Ride', 'Meals'],
   },
 ];
 
@@ -98,10 +98,10 @@ const FeaturedPackages = () => {
             <span className="font-semibold">Limited Time Offers</span>
           </motion.div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-            Featured Packages
+            Featured Sri Lankan Packages
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Handpicked exclusive deals with amazing discounts for your next adventure
+            Handpicked exclusive deals with amazing discounts for your Sri Lankan adventure
           </p>
         </motion.div>
 
@@ -114,7 +114,7 @@ const FeaturedPackages = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.2 }}
               whileHover={{ y: -10 }}
-              className="card group hover:shadow-2xl transition-all duration-300 overflow-hidden"
+              className="card group hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col"
             >
               <div className="relative overflow-hidden">
                 <img
@@ -130,7 +130,7 @@ const FeaturedPackages = () => {
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-6 flex-1 flex flex-col">
                 <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-primary transition-colors">
                   {pkg.name}
                 </h3>
@@ -157,7 +157,7 @@ const FeaturedPackages = () => {
                   <span className="ml-2 text-gray-600">({pkg.reviews} reviews)</span>
                 </div>
 
-                <p className="text-gray-600 mb-4">{pkg.description}</p>
+                <p className="text-gray-600 mb-4 flex-1">{pkg.description}</p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
                   {pkg.includes.map((item, index) => (
@@ -167,20 +167,32 @@ const FeaturedPackages = () => {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-4 border-t mb-4">
                   <div>
                     <span className="text-gray-400 line-through text-lg">${pkg.originalPrice}</span>
                     <span className="text-3xl font-bold text-primary ml-2">${pkg.price}</span>
                   </div>
+                </div>
+
+                <div className="flex gap-3">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleAddToCart(pkg)}
-                    className="btn-primary"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-all transform hover:scale-105"
                   >
                     Book Now
                   </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:border-blue-400 hover:text-blue-600 transition-all"
+                  >
+                    View Details
+                  </motion.button>
                 </div>
+
+            
               </div>
             </motion.div>
           ))}

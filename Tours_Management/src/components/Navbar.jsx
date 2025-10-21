@@ -30,6 +30,26 @@ const Navbar = ({ isHomePage = false }) => {
     }
   };
 
+  const handleSectionNavigation = (sectionId) => {
+    if (!isHomePage) {
+      // If not on home page, navigate to home first, then scroll to section
+      navigate('/');
+      // Use setTimeout to wait for navigation to complete
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      // If on home page, just scroll to section
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   // Different styles for home page vs other pages
   const getNavbarStyles = () => {
     if (isHomePage) {
@@ -77,24 +97,39 @@ const Navbar = ({ isHomePage = false }) => {
               <Link to="/" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
                 Home
               </Link>
-              <a href="#tours" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+              <button 
+                onClick={() => handleSectionNavigation('tours')}
+                className={`${getTextColor()} transition-all font-medium hover:scale-110 transform bg-transparent border-none cursor-pointer`}
+              >
                 Tours
-              </a>
+              </button>
               <Link to="/all-tours" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
                 All Tours
               </Link>
-              <a href="#packages" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+              <button 
+                onClick={() => handleSectionNavigation('packages')}
+                className={`${getTextColor()} transition-all font-medium hover:scale-110 transform bg-transparent border-none cursor-pointer`}
+              >
                 Packages
-              </a>
-              <a href="#destinations" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+              </button>
+              <button 
+                onClick={() => handleSectionNavigation('destinations')}
+                className={`${getTextColor()} transition-all font-medium hover:scale-110 transform bg-transparent border-none cursor-pointer`}
+              >
                 Destinations
-              </a>
-              <a href="#offers" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+              </button>
+              <button 
+                onClick={() => handleSectionNavigation('offers')}
+                className={`${getTextColor()} transition-all font-medium hover:scale-110 transform bg-transparent border-none cursor-pointer`}
+              >
                 Offers
-              </a>
-              <a href="#about" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+              </button>
+              <button 
+                onClick={() => handleSectionNavigation('about')}
+                className={`${getTextColor()} transition-all font-medium hover:scale-110 transform bg-transparent border-none cursor-pointer`}
+              >
                 About
-              </a>
+              </button>
             </div>
 
             <div className="hidden lg:flex items-center space-x-6">
@@ -170,13 +205,15 @@ const Navbar = ({ isHomePage = false }) => {
                 >
                   Home
                 </Link>
-                <a
-                  href="#tours"
-                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    handleSectionNavigation('tours');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block text-left text-gray-700 hover:text-primary transition-colors font-medium text-lg bg-transparent border-none cursor-pointer w-full"
                 >
                   Tours
-                </a>
+                </button>
                 <Link
                   to="/all-tours"
                   className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
@@ -184,34 +221,42 @@ const Navbar = ({ isHomePage = false }) => {
                 >
                   All Tours
                 </Link>
-                <a
-                  href="#packages"
-                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    handleSectionNavigation('packages');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block text-left text-gray-700 hover:text-primary transition-colors font-medium text-lg bg-transparent border-none cursor-pointer w-full"
                 >
                   Packages
-                </a>
-                <a
-                  href="#destinations"
-                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                </button>
+                <button
+                  onClick={() => {
+                    handleSectionNavigation('destinations');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block text-left text-gray-700 hover:text-primary transition-colors font-medium text-lg bg-transparent border-none cursor-pointer w-full"
                 >
                   Destinations
-                </a>
-                <a
-                  href="#offers"
-                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                </button>
+                <button
+                  onClick={() => {
+                    handleSectionNavigation('offers');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block text-left text-gray-700 hover:text-primary transition-colors font-medium text-lg bg-transparent border-none cursor-pointer w-full"
                 >
                   Offers
-                </a>
-                <a
-                  href="#about"
-                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                </button>
+                <button
+                  onClick={() => {
+                    handleSectionNavigation('about');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block text-left text-gray-700 hover:text-primary transition-colors font-medium text-lg bg-transparent border-none cursor-pointer w-full"
                 >
                   About
-                </a>
+                </button>
                 <Link
                   to="/cart"
                   className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors font-medium text-lg"
