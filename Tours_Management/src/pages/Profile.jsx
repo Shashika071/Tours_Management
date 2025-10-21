@@ -1,18 +1,21 @@
-import { FaEdit, FaEnvelope, FaMapMarkerAlt, FaPhone, FaSave, FaTimes, FaUser } from 'react-icons/fa';
+import { FaCamera, FaEdit, FaEnvelope, FaMapMarkerAlt, FaPhone, FaSave, FaTimes, FaUser } from 'react-icons/fa';
+import { useRef, useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 
 const Profile = () => {
-  const { user, logout, openAuthModal } = useAuth();
+  const { user, logout, updateProfile, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const fileInputRef = useRef(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '+1 (555) 123-4567',
-    address: '123 Travel Street, Tourism City, TC 12345',
   });
 
   const bookings = [
@@ -59,19 +62,49 @@ const Profile = () => {
     });
   };
 
-  const handleSave = () => {
-    // Here you would typically save to backend
-    setIsEditing(false);
+  const handleSave = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    const result = await updateProfile(profileData, selectedImage);
+    setLoading(false);
+
+    if (result.success) {
+      setSuccess('Profile updated successfully!');
+      setIsEditing(false);
+      setSelectedImage(null);
+    } else {
+      setError(result.message);
+    }
   };
 
   const handleCancel = () => {
     setProfileData({
       name: user.name,
       email: user.email,
-      phone: '+1 (555) 123-4567',
-      address: '123 Travel Street, Tourism City, TC 12345',
     });
     setIsEditing(false);
+    setSelectedImage(null);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+    }
+  };
+
+  const getProfileImageUrl = () => {
+    if (selectedImage) {
+      return URL.createObjectURL(selectedImage);
+    }
+    if (user.profileImage) {
+      return `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${user.profileImage}`;
+    }
+    return `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=3B82F6&color=fff&size=128`;
   };
 
   const getStatusColor = (status) => {
@@ -95,10 +128,27 @@ const Profile = () => {
           <div className="lg:col-span-1">
             <div className="card p-6">
               <div className="text-center mb-6">
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-32 h-32 rounded-full mx-auto mb-4"
+                <div className="relative inline-block">
+                  <img
+                    src={getProfileImageUrl()}
+                    alt={user.name}
+                    className="w-32 h-32 rounded-full mx-auto mb-4"
+                  />
+                  {isEditing && (
+                    <button
+                      onClick={() => fileInputRef.current.click()}
+                      className="absolute bottom-2 right-2 bg-primary text-white p-2 rounded-full hover:bg-primary-dark transition-colors"
+                    >
+                      <FaCamera className="text-sm" />
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
                 />
                 <h2 className="text-2xl font-bold text-gray-800">{user.name}</h2>
                 <p className="text-gray-600">{user.email}</p>
@@ -135,10 +185,11 @@ const Profile = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={handleSave}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+                      disabled={loading}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2 disabled:opacity-50"
                     >
                       <FaSave />
-                      <span>Save</span>
+                      <span>{loading ? 'Saving...' : 'Save'}</span>
                     </button>
                     <button
                       onClick={handleCancel}
@@ -150,6 +201,18 @@ const Profile = () => {
                   </div>
                 )}
               </div>
+
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                  {success}
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div className="flex items-start space-x-4">

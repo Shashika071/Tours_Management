@@ -2,6 +2,7 @@ import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-route
 
 import AllTours from './pages/AllTours';
 import { AuthProvider } from './context/AuthContext';
+import AuthSuccess from './pages/AuthSuccess';
 import Cart from './pages/Cart';
 import { CartProvider } from './context/CartContext';
 import Checkout from './pages/Checkout';
@@ -10,6 +11,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
+import ResetPassword from './pages/ResetPassword';
 import ScrollToTop from './components/ScrollToTop';
 
 function AppContent() {
@@ -25,6 +27,8 @@ function AppContent() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth-success" element={<AuthSuccess />} />
       </Routes>
       <Footer />
       <FloatingButtons />

@@ -155,7 +155,11 @@ const Navbar = ({ isHomePage = false }) => {
                     onClick={handleAuthClick}
                     className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors"
                   >
-                    <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border-2 border-primary shadow-md" />
+                    <img 
+                      src={user.profileImage ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${user.profileImage}` : `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=3B82F6&color=fff&size=40`} 
+                      alt={user.name} 
+                      className="w-10 h-10 rounded-full border-2 border-primary shadow-md" 
+                    />
                     <span className="font-medium">{user.name}</span>
                   </motion.button>
                   <motion.button
