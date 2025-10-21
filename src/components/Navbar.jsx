@@ -1,0 +1,265 @@
+﻿import { AnimatePresence, motion } from 'framer-motion';
+import { FaBars, FaShoppingCart, FaTimes } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
+import AuthModal from './AuthModal';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+
+const Navbar = ({ isHomePage = false }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { getTotalItems } = useCart();
+  const { user, logout, openAuthModal } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleAuthClick = () => {
+    if (user) {
+      navigate('/profile');
+    } else {
+      openAuthModal();
+    }
+  };
+
+  // Different styles for home page vs other pages
+  const getNavbarStyles = () => {
+    if (isHomePage) {
+      // Home page: transparent at top, solid when scrolled
+      return scrolled 
+        ? 'bg-white/90 backdrop-blur-lg shadow-2xl' 
+        : 'bg-transparent';
+    } else {
+      // Other pages: always solid
+      return 'bg-white/90 backdrop-blur-lg shadow-2xl';
+    }
+  };
+
+  // Text color changes based on transparency
+  const getTextColor = () => {
+    if (isHomePage && !scrolled) {
+      return 'text-white hover:text-gray-200';
+    }
+    return 'text-gray-700 hover:text-primary';
+  };
+
+  return (
+    <>
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${getNavbarStyles()}`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <Link to="/" className="flex items-center space-x-3 group">
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+                className={`text-3xl ${isHomePage && !scrolled ? 'text-white' : 'text-primary'}`}
+              >
+                ✈️
+              </motion.div>
+              <span className={`text-2xl font-bold ${isHomePage && !scrolled ? 'text-white' : 'bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent'}`}>
+                TourHub
+              </span>
+            </Link>
+
+            <div className="hidden lg:flex items-center space-x-8">
+              <Link to="/" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                Home
+              </Link>
+              <a href="#tours" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                Tours
+              </a>
+              <Link to="/all-tours" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                All Tours
+              </Link>
+              <a href="#packages" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                Packages
+              </a>
+              <a href="#destinations" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                Destinations
+              </a>
+              <a href="#offers" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                Offers
+              </a>
+              <a href="#about" className={`${getTextColor()} transition-all font-medium hover:scale-110 transform`}>
+                About
+              </a>
+            </div>
+
+            <div className="hidden lg:flex items-center space-x-6">
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <Link to="/cart" className={`relative ${getTextColor()} transition-colors`}>
+                  <FaShoppingCart className="text-2xl" />
+                  {getTotalItems() > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg"
+                    >
+                      {getTotalItems()}
+                    </motion.span>
+                  )}
+                </Link>
+              </motion.div>
+
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={handleAuthClick}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors"
+                  >
+                    <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border-2 border-primary shadow-md" />
+                    <span className="font-medium">{user.name}</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={logout}
+                    className="px-4 py-2 text-sm text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:shadow-lg transition-all"
+                  >
+                    Logout
+                  </motion.button>
+                </div>
+              ) : (
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={openAuthModal} 
+                  className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition-all"
+                >
+                  Login / Sign Up
+                </motion.button>
+              )}
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`lg:hidden ${getTextColor()} z-50`}
+            >
+              {isMenuOpen ? <FaTimes className="text-3xl" /> : <FaBars className="text-3xl" />}
+            </motion.button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden bg-white/95 backdrop-blur-lg border-t shadow-xl"
+            >
+              <div className="px-6 py-6 space-y-4">
+                <Link
+                  to="/"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <a
+                  href="#tours"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Tours
+                </a>
+                <Link
+                  to="/all-tours"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  All Tours
+                </Link>
+                <a
+                  href="#packages"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Packages
+                </a>
+                <a
+                  href="#destinations"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Destinations
+                </a>
+                <a
+                  href="#offers"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Offers
+                </a>
+                <a
+                  href="#about"
+                  className="block text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  About
+                </a>
+                <Link
+                  to="/cart"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FaShoppingCart />
+                  <span>Cart ({getTotalItems()})</span>
+                </Link>
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleAuthClick();
+                        setIsMenuOpen(false);
+                      }}
+                      className="block w-full text-left text-gray-700 hover:text-primary transition-colors font-medium text-lg"
+                    >
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="block w-full text-left text-red-500 hover:text-red-700 transition-colors font-medium text-lg"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      openAuthModal();
+                      setIsMenuOpen(false);
+                    }}
+                    className="bg-gradient-to-r from-primary to-secondary text-white w-full py-3 rounded-lg font-semibold text-lg"
+                  >
+                    Login / Sign Up
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
+      <AuthModal />
+    </>
+  );
+};
+
+export default Navbar;

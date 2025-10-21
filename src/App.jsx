@@ -1,0 +1,48 @@
+import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+
+import AllTours from './pages/AllTours';
+import { AuthProvider } from './context/AuthContext';
+import Cart from './pages/Cart';
+import { CartProvider } from './context/CartContext';
+import Checkout from './pages/Checkout';
+import FloatingButtons from './components/FloatingButtons';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+import Navbar from './components/Navbar';
+import Profile from './pages/Profile';
+import ScrollToTop from './components/ScrollToTop';
+
+function AppContent() {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar isHomePage={isHomePage} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/all-tours" element={<AllTours />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+      <Footer />
+      <FloatingButtons />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <ScrollToTop />
+          <AppContent />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;
