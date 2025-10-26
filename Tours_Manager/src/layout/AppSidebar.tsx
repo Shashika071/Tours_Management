@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
-
-// Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
+  GroupIcon,
   HorizontaLDots,
   ListIcon,
   PageIcon,
@@ -15,8 +12,14 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "../icons";
+import { Link, useLocation } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
+
+// Assume these icons are imported from an icon library
+
+
 
 type NavItem = {
   name: string;
@@ -30,6 +33,11 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+  },
+  {
+    icon: <GroupIcon />,
+    name: "Guide Management",
+    path: "/guides",
   },
   {
     icon: <CalenderIcon />,
@@ -368,7 +376,6 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
       </div>
     </aside>
   );

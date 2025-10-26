@@ -9,12 +9,14 @@ import BasicTables from "./pages/Tables/BasicTables";
 import Blank from "./pages/Blank";
 import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
+import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import FormElements from "./pages/Forms/FormElements";
 import GuideDashboard from "./pages/GuideDashboard/GuideDashboard";
 import Images from "./pages/UiElements/Images";
 import LineChart from "./pages/Charts/LineChart";
 import NotFound from "./pages/OtherPage/NotFound";
 import PlaceholderPage from "./components/common/PlaceholderPage";
+import ResetPassword from "./pages/AuthPages/ResetPassword";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -113,6 +115,8 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />

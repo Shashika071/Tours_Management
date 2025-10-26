@@ -22,7 +22,7 @@ export default function SignInForm() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/auth/login", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,15 +48,7 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="w-full max-w-md pt-10 mx-auto">
-        <button
-          onClick={() => navigate("/")}
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon className="size-5" />
-          Back to dashboard
-        </button>
-      </div>
+    
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
