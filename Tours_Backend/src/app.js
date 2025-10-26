@@ -1,5 +1,6 @@
 import 'dotenv/config';
 
+import adminAuthRoutes from './routes/AdminRouter/auth.js';
 import authRoutes from './routes/ClientRouter/auth.js';
 import cors from 'cors';
 import express from 'express';
@@ -23,6 +24,7 @@ app.use(passport.initialize());
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/auth', adminAuthRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'Server is running' }));
 
