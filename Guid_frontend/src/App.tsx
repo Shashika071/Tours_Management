@@ -11,10 +11,12 @@ import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import FormElements from "./pages/Forms/FormElements";
+import GeneralSettings from "./pages/Settings/GeneralSettings";
 import GuideDashboard from "./pages/GuideDashboard/GuideDashboard";
 import Images from "./pages/UiElements/Images";
 import LineChart from "./pages/Charts/LineChart";
 import NotFound from "./pages/OtherPage/NotFound";
+import PaymentSettings from "./pages/Settings/PaymentSettings";
 import PlaceholderPage from "./components/common/PlaceholderPage";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -73,11 +75,8 @@ export default function App() {
             <Route path="/guides/manage" element={<PlaceholderPage title="Manage Guides" description="Edit guide details and assign tours to guides." />} />
 
             {/* Settings */}
-            <Route path="/settings/general" element={<PlaceholderPage title="General Settings" description="Configure site name, contact info, logo, and basic settings." />} />
-            <Route path="/settings/payment" element={<PlaceholderPage title="Payment Settings" description="Configure payment gateways and billing options." />} />
-            <Route path="/settings/notifications" element={<PlaceholderPage title="Notifications" description="Manage email templates and notification settings." />} />
-            <Route path="/settings/languages" element={<PlaceholderPage title="Languages & Currency" description="Set language preferences and currency options." />} />
-            <Route path="/settings/accounts" element={<PlaceholderPage title="User Accounts" description="Manage admin, guide, and staff account permissions." />} />
+            <Route path="/settings/general" element={<GeneralSettings />} />
+            <Route path="/settings/payment" element={<PaymentSettings />} />
 
             {/* Messages / Support */}
             <Route path="/messages/inbox" element={<PlaceholderPage title="Inbox" description="View messages from customers and inquiries." />} />

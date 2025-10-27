@@ -216,3 +216,132 @@ export const verifyResetToken = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const updateProfileDetails = async (req, res) => {
+  try {
+    const guideId = req.user.userId;
+    if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
+
+    const guide = await Guide.findById(guideId);
+    if (!guide) return res.status(404).json({ message: 'Guide not found' });
+
+    const updateData = {};
+    const requiresReApproval = processProfileUpdates(req, guide, updateData);
+
+    // Mark profile as completed
+    updateData.profileCompleted = true;
+
+    const updatedGuide = await Guide.findByIdAndUpdate(guideId, updateData, { new: true });
+    if (!updatedGuide) return res.status(404).json({ message: 'Guide not found' });
+
+    res.json({
+      message: 'Profile details updated successfully',
+      guide: updatedGuide,
+      requiresReApproval,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Helper function to process profile updates and determine if re-approval is needed
+const processProfileUpdates = (req, guide, updateData) => {
+  let requiresReApproval = false;
+
+  requiresReApproval = processFormFields(req, guide, updateData) || requiresReApproval;
+  requiresReApproval = processFileUploads(req, guide, updateData) || requiresReApproval;
+
+  // Only reset profile approval status for sensitive updates (keep account status approved)
+  if (requiresReApproval) {
+    updateData.profileApproved = false;
+    // Note: status remains 'approved' so guide can still log in
+  }
+
+  return requiresReApproval;
+};
+
+// Process form field updates
+const processFormFields = (req, guide, updateData) => {
+  let requiresReApproval = false;
+
+  const formFields = {
+    dateOfBirth: (value) => {
+      const date = new Date(value);
+      if (!Number.isNaN(date.getTime())) updateData.dateOfBirth = date;
+    },
+    country: (value) => updateData.country = value,
+    city: (value) => updateData.city = value,
+    nationalId: (value) => {
+      updateData.nationalId = value;
+      requiresReApproval = true; // Always require re-approval for sensitive fields
+    },
+    registrationNumber: (value) => {
+      updateData.registrationNumber = value;
+      requiresReApproval = true; // Always require re-approval for sensitive fields
+    },
+    yearsOfExperience: (value) => {
+      const num = Number.parseInt(value);
+      if (!Number.isNaN(num)) updateData.yearsOfExperience = num;
+    },
+    languagesSpoken: (value) => updateData.languagesSpoken = value,
+    areasOfOperation: (value) => updateData.areasOfOperation = value,
+    specialization: (value) => updateData.specialization = value,
+    shortBio: (value) => updateData.shortBio = value,
+  };
+
+  // Apply form field updates
+  for (const [field, updater] of Object.entries(formFields)) {
+    const value = req.body[field];
+    if (value && value.trim()) {
+      updater(value.trim());
+    }
+  }
+
+  return requiresReApproval;
+};
+
+// Process file uploads
+const processFileUploads = (req, guide, updateData) => {
+  let requiresReApproval = false;
+
+  if (req.files) {
+    const fileFields = ['idFront', 'idBack', 'certificate'];
+    for (const field of fileFields) {
+      if (req.files[field]) {
+        updateData[`${field}Image`] = `/uploads/${req.files[field][0].filename}`;
+        requiresReApproval = true; // Always require re-approval for document uploads
+      }
+    }
+  }
+
+  return requiresReApproval;
+};
+
+export const updatePaymentSettings = async (req, res) => {
+  try {
+    const guideId = req.user.userId;
+    if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
+
+    const { preferredPaymentMethod, bankAccountNumber, taxId } = req.body;
+
+    const guide = await Guide.findById(guideId);
+    if (!guide) return res.status(404).json({ message: 'Guide not found' });
+
+    const updateData = {};
+    if (preferredPaymentMethod !== undefined) updateData.preferredPaymentMethod = preferredPaymentMethod;
+    if (bankAccountNumber !== undefined) updateData.bankAccountNumber = bankAccountNumber;
+    if (taxId !== undefined) updateData.taxId = taxId;
+
+    const updatedGuide = await Guide.findByIdAndUpdate(guideId, updateData, { new: true });
+    if (!updatedGuide) return res.status(404).json({ message: 'Guide not found' });
+
+    res.json({
+      message: 'Payment settings updated successfully',
+      guide: updatedGuide,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

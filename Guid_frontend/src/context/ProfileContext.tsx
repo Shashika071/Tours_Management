@@ -7,6 +7,24 @@ interface Guide {
   phone?: string;
   address?: string;
   profileImage?: string;
+  dateOfBirth?: string;
+  country?: string;
+  city?: string;
+  nationalId?: string;
+  idFrontImage?: string;
+  idBackImage?: string;
+  registrationNumber?: string;
+  certificateImage?: string;
+  yearsOfExperience?: number;
+  languagesSpoken?: string;
+  areasOfOperation?: string;
+  specialization?: string;
+  shortBio?: string;
+  preferredPaymentMethod?: string;
+  bankAccountNumber?: string;
+  taxId?: string;
+  profileCompleted: boolean;
+  profileApproved: boolean;
   status: string;
 }
 

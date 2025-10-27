@@ -38,7 +38,7 @@ app.use((err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
   }
 
-  if (err.message === 'Only image files are allowed!') return res.status(400).json({ message: err.message });
+  if (err.message === 'Only image and PDF files are allowed!') return res.status(400).json({ message: err.message });
 
   console.error(err);
   res.status(500).json({ message: 'Something went wrong!' });

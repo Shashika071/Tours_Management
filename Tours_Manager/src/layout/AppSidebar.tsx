@@ -37,7 +37,10 @@ const navItems: NavItem[] = [
   {
     icon: <GroupIcon />,
     name: "Guide Management",
-    path: "/guides",
+    subItems: [
+      { name: "Manage Guides", path: "/guides", pro: false },
+      { name: "Profile Review", path: "/guide-profile-review", pro: false },
+    ],
   },
   {
     icon: <CalenderIcon />,

@@ -10,6 +10,7 @@ import Blank from "./pages/Blank";
 import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
 import FormElements from "./pages/Forms/FormElements";
+import GuideProfileReview from "./pages/GuideProfileReview";
 import Guides from "./pages/Guides";
 import Home from "./pages/Dashboard/Home";
 import Images from "./pages/UiElements/Images";
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/guides" element={<Guides />} />
+            <Route path="/guide-profile-review" element={<GuideProfileReview />} />
             <Route path="/blank" element={<Blank />} />
 
             {/* Forms */}

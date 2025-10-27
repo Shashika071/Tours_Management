@@ -112,9 +112,6 @@ const othersItems: NavItem[] = [
     subItems: [
       { name: "General Settings", path: "/settings/general", pro: false },
       { name: "Payment Settings", path: "/settings/payment", pro: false },
-      { name: "Notifications", path: "/settings/notifications", pro: false },
-      { name: "Languages & Currency", path: "/settings/languages", pro: false },
-      { name: "User Accounts", path: "/settings/accounts", pro: false },
     ],
   },
   {

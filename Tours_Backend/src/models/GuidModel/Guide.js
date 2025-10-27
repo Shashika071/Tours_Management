@@ -33,6 +33,81 @@ const GuideSchema = new Schema(
       type: String,
       default: null,
     },
+    // Profile details
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
+    country: {
+      type: String,
+      default: null,
+    },
+    city: {
+      type: String,
+      default: null,
+    },
+    nationalId: {
+      type: String,
+      default: null,
+    },
+    idFrontImage: {
+      type: String,
+      default: null,
+    },
+    idBackImage: {
+      type: String,
+      default: null,
+    },
+    registrationNumber: {
+      type: String,
+      default: null,
+    },
+    certificateImage: {
+      type: String,
+      default: null,
+    },
+    yearsOfExperience: {
+      type: Number,
+      default: 0,
+    },
+    languagesSpoken: {
+      type: String,
+      default: null,
+    },
+    areasOfOperation: {
+      type: String,
+      default: null,
+    },
+    specialization: {
+      type: String,
+      default: null,
+    },
+    shortBio: {
+      type: String,
+      default: null,
+    },
+    // Payment details
+    preferredPaymentMethod: {
+      type: String,
+      default: null,
+    },
+    bankAccountNumber: {
+      type: String,
+      default: null,
+    },
+    taxId: {
+      type: String,
+      default: null,
+    },
+    // Approval
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    profileApproved: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],

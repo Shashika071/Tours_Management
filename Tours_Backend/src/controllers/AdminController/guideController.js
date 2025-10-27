@@ -118,3 +118,26 @@ export const getAllGuides = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getGuidesForProfileReview = async (req, res) => {
+  try {
+    const guides = await Guide.find({ profileCompleted: true, profileApproved: false }).select('-password');
+    res.json({ guides });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const approveGuideProfile = async (req, res) => {
+  try {
+    const { guideId } = req.params;
+    const guide = await Guide.findByIdAndUpdate(guideId, { profileApproved: true }, { new: true });
+    if (!guide) return res.status(404).json({ message: 'Guide not found' });
+
+    res.json({ message: 'Guide profile approved successfully', guide });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

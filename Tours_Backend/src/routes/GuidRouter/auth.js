@@ -30,8 +30,13 @@ const resetPasswordValidation = [
 router.post('/register', registerValidation, authController.register);
 router.post('/login', loginValidation, authController.login);
 router.get('/profile', auth, authController.getProfile);
+router.post('/profile/update', auth, upload.fields([
+  { name: 'idFront', maxCount: 1 },
+  { name: 'idBack', maxCount: 1 },
+  { name: 'certificate', maxCount: 1 },
+]), authController.updateProfileDetails);
+router.post('/payment/update', auth, authController.updatePaymentSettings);
 router.put('/profile', auth, upload.single('profileImage'), authController.updateProfile);
-
 // Password reset routes
 router.post('/forgot-password', forgotPasswordValidation, authController.forgotPassword);
 router.post('/reset-password', resetPasswordValidation, authController.resetPassword);

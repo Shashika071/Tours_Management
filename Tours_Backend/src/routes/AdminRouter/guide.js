@@ -13,5 +13,7 @@ router.get('/pending', guideController.getPendingGuides);
 router.put('/:guideId/approve', guideController.approveGuide);
 router.put('/:guideId/reject', guideController.rejectGuide);
 router.get('/', guideController.getAllGuides);
+router.get('/profile-review', guideController.getGuidesForProfileReview);
+router.put('/:guideId/approve-profile', guideController.approveGuideProfile);
 
 export default router;
