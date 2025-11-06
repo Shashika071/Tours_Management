@@ -1,6 +1,8 @@
 import PageMeta from "../../components/common/PageMeta";
+import { useNavigate } from "react-router";
 
 const GuideDashboard = () => {
+  const navigate = useNavigate();
   return (
     <>
       <PageMeta
@@ -104,7 +106,10 @@ const GuideDashboard = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <button 
+                onClick={() => navigate('/tours/add')}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
                 + Add New Tour
               </button>
               <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">

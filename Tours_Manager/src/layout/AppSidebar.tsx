@@ -43,6 +43,13 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    icon: <PageIcon />,
+    name: "Tour Management",
+    subItems: [
+      { name: "Manage Tours", path: "/tours", pro: false },
+    ],
+  },
+  {
     icon: <CalenderIcon />,
     name: "Calendar",
     path: "/calendar",

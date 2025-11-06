@@ -9,6 +9,7 @@ import BasicTables from "./pages/Tables/BasicTables";
 import Blank from "./pages/Blank";
 import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
+import CreateTour from "./pages/GuideDashboard/CreateTour";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import FormElements from "./pages/Forms/FormElements";
 import GeneralSettings from "./pages/Settings/GeneralSettings";
@@ -36,7 +37,7 @@ export default function App() {
             <Route index path="/" element={<GuideDashboard />} />
 
             {/* Tours Management */}
-            <Route path="/tours/add" element={<PlaceholderPage title="Add Tour" description="Create a new tour listing with details, pricing, and schedule." />} />
+            <Route path="/tours/add" element={<CreateTour />} />
             <Route path="/tours/manage" element={<PlaceholderPage title="All Tours" description="Manage and edit all your tour listings." />} />
             <Route path="/tours/categories" element={<PlaceholderPage title="Tour Categories" description="Organize tours by categories and types." />} />
             <Route path="/tours/locations" element={<PlaceholderPage title="Tour Locations" description="Manage tour destinations and locations." />} />

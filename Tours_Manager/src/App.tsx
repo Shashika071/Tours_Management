@@ -19,6 +19,7 @@ import NotFound from "./pages/OtherPage/NotFound";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
+import Tours from "./pages/Tours";
 import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
 
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/guides" element={<Guides />} />
+            <Route path="/tours" element={<Tours />} />
             <Route path="/guide-profile-review" element={<GuideProfileReview />} />
             <Route path="/blank" element={<Blank />} />
 

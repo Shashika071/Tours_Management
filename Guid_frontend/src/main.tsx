@@ -7,15 +7,18 @@ import { AppWrapper } from "./components/common/PageMeta.tsx";
 import { ProfileProvider } from "./context/ProfileContext.tsx";
 import { StrictMode } from "react";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
+import { TourProvider } from "./context/TourContext.tsx";
 import { createRoot } from "react-dom/client";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <ProfileProvider>
-        <AppWrapper>
-          <App />
-        </AppWrapper>
+        <TourProvider>
+          <AppWrapper>
+            <App />
+          </AppWrapper>
+        </TourProvider>
       </ProfileProvider>
     </ThemeProvider>
   </StrictMode>,
