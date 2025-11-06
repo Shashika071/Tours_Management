@@ -96,15 +96,23 @@ const CreateTour: React.FC = () => {
         // Combine duration value and unit
         const duration = `${formData.durationValue} ${formData.durationUnit}`;
         formDataToSend.append('duration', duration);
+        console.log('Duration:', duration);
       } else if (key !== 'durationUnit') {
         // Skip durationUnit as it's already combined
         formDataToSend.append(key, value);
+        console.log(`${key}:`, value);
       }
     }
 
     // Add images
     for (const image of images) {
       formDataToSend.append('images', image);
+      console.log('Image:', image.name);
+    }
+
+    console.log('FormData entries:');
+    for (const [key, value] of formDataToSend.entries()) {
+      console.log(`${key}:`, value);
     }
 
     try {
@@ -116,11 +124,11 @@ const CreateTour: React.FC = () => {
         alert(result.message);
         navigate('/tours/manage');
       } else {
-        alert(result.message);
+        alert(`Tour creation failed: ${result.message}`);
       }
     } catch (error) {
-      console.error('Error creating tour:', error);
-      alert('Error creating tour');
+      console.error('Unexpected error in handleSubmit:', error);
+      alert(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setLoading(false);
     }

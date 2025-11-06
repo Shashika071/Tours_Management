@@ -7,6 +7,12 @@ interface Tour {
   price: number;
   duration: string;
   location: string;
+  itinerary?: string;
+  inclusions?: string;
+  exclusions?: string;
+  maxParticipants?: number;
+  difficulty: string;
+  category: string;
   images: string[];
   status: 'pending' | 'approved' | 'rejected';
   guide: {
@@ -14,6 +20,7 @@ interface Tour {
     name: string;
     email: string;
   };
+  isActive: boolean;
   createdAt: string;
   rejectionReason?: string;
 }
@@ -24,12 +31,24 @@ const Tours: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [expandedTour, setExpandedTour] = useState<string | null>(null);
+  const [tourCounts, setTourCounts] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    all: 0
+  });
 
   const fetchTours = useCallback(async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const endpoint = activeTab === 'pending' ? 'pending' : 'all';
+      let endpoint = 'all';
+      
+      if (activeTab !== 'all') {
+        endpoint = activeTab;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${endpoint}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -42,6 +61,9 @@ const Tours: React.FC = () => {
 
       const data = await response.json();
       setTours(data.tours);
+
+      // Fetch counts for all tabs
+      await fetchTourCounts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -49,9 +71,43 @@ const Tours: React.FC = () => {
     }
   }, [activeTab]);
 
+  const fetchTourCounts = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const endpoints = ['pending', 'approved', 'rejected', 'all'];
+      const counts = {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        all: 0
+      };
+
+      for (const endpoint of endpoints) {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          counts[endpoint as keyof typeof counts] = data.tours.length;
+        }
+      }
+
+      setTourCounts(counts);
+    } catch (err) {
+      console.error('Failed to fetch tour counts:', err);
+    }
+  };
+
   useEffect(() => {
     fetchTours();
   }, [fetchTours]);
+
+  useEffect(() => {
+    fetchTourCounts();
+  }, []);
 
   const handleApprove = async (tourId: string) => {
     try {
@@ -67,8 +123,9 @@ const Tours: React.FC = () => {
         throw new Error('Failed to approve tour');
       }
 
-      // Update local state
+      // Update local state and refresh counts
       setTours(tours.filter(tour => tour._id !== tourId));
+      await fetchTourCounts();
       alert('Tour approved successfully');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'An error occurred');
@@ -106,10 +163,11 @@ const Tours: React.FC = () => {
         throw new Error('Failed to reject tour');
       }
 
-      // Update local state
+      // Update local state and refresh counts
       setTours(tours.filter(tour => tour._id !== tourId));
       setRejectingTour(null);
       setRejectionReason('');
+      await fetchTourCounts();
       alert('Tour rejected successfully');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'An error occurred');
@@ -127,6 +185,21 @@ const Tours: React.FC = () => {
     }
   };
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy':
+        return 'bg-green-100 text-green-800';
+      case 'Moderate':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Challenging':
+        return 'bg-orange-100 text-orange-800';
+      case 'Expert':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
@@ -140,7 +213,7 @@ const Tours: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">Tour Management</h1>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-4 mb-6">
+      <div className="flex flex-wrap gap-4 mb-6">
         <button
           onClick={() => setActiveTab('pending')}
           className={`px-4 py-2 rounded-lg font-medium ${
@@ -149,7 +222,27 @@ const Tours: React.FC = () => {
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          Pending Tours ({tours.filter(t => t.status === 'pending').length})
+          Pending Tours ({tourCounts.pending})
+        </button>
+        <button
+          onClick={() => setActiveTab('approved')}
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 'approved'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Approved Tours ({tourCounts.approved})
+        </button>
+        <button
+          onClick={() => setActiveTab('rejected')}
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 'rejected'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Rejected Tours ({tourCounts.rejected})
         </button>
         <button
           onClick={() => setActiveTab('all')}
@@ -159,7 +252,7 @@ const Tours: React.FC = () => {
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          All Tours ({tours.length})
+          All Tours ({tourCounts.all})
         </button>
       </div>
 
@@ -188,7 +281,7 @@ const Tours: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
                     <div>
                       <span className="text-sm font-medium text-gray-500">Price:</span>
                       <p className="text-lg font-semibold">${tour.price}</p>
@@ -202,6 +295,18 @@ const Tours: React.FC = () => {
                       <p>{tour.location}</p>
                     </div>
                     <div>
+                      <span className="text-sm font-medium text-gray-500">Difficulty:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(tour.difficulty)}`}>
+                        {tour.difficulty}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Category:</span>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {tour.category}
+                      </span>
+                    </div>
+                    <div>
                       <span className="text-sm font-medium text-gray-500">Status:</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tour.status)}`}>
                         {tour.status.charAt(0).toUpperCase() + tour.status.slice(1)}
@@ -211,7 +316,9 @@ const Tours: React.FC = () => {
 
                   <div className="mb-4">
                     <span className="text-sm font-medium text-gray-500">Description:</span>
-                    <p className="text-gray-700 mt-1 line-clamp-3">{tour.description}</p>
+                    <p className={`text-gray-700 mt-1 ${expandedTour === tour._id ? '' : 'line-clamp-3'}`}>
+                      {tour.description}
+                    </p>
                   </div>
 
                   {tour.rejectionReason && (
@@ -241,6 +348,87 @@ const Tours: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Expandable Details */}
+                  {expandedTour === tour._id && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                      <h4 className="font-semibold mb-3">Tour Details</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Tour ID:</span>
+                          <p className="text-sm font-mono break-all">{tour._id}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Guide ID:</span>
+                          <p className="text-sm font-mono break-all">{tour.guide._id}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Difficulty:</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(tour.difficulty)}`}>
+                            {tour.difficulty}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Category:</span>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {tour.category}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Max Participants:</span>
+                          <p className="text-sm">{tour.maxParticipants || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Active Status:</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            tour.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {tour.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Created Date:</span>
+                          <p className="text-sm">{new Date(tour.createdAt).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500">Total Images:</span>
+                          <p className="text-sm">{tour.images ? tour.images.length : 0}</p>
+                        </div>
+                      </div>
+
+                      {/* Additional Details Sections */}
+                      {tour.itinerary && (
+                        <div className="mb-4">
+                          <span className="text-sm font-medium text-gray-500">Itinerary:</span>
+                          <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{tour.itinerary}</p>
+                        </div>
+                      )}
+
+                      {tour.inclusions && (
+                        <div className="mb-4">
+                          <span className="text-sm font-medium text-gray-500">Inclusions:</span>
+                          <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{tour.inclusions}</p>
+                        </div>
+                      )}
+
+                      {tour.exclusions && (
+                        <div className="mb-4">
+                          <span className="text-sm font-medium text-gray-500">Exclusions:</span>
+                          <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{tour.exclusions}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* View Details Button */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setExpandedTour(expandedTour === tour._id ? null : tour._id)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+                    >
+                      {expandedTour === tour._id ? 'Hide Details' : 'View Details'}
+                    </button>
+                  </div>
                 </div>
 
                 {tour.status === 'pending' && (

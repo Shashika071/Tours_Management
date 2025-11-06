@@ -2,7 +2,9 @@ import {
   approveTour,
   deleteTour,
   getAllTours,
+  getApprovedTours,
   getPendingTours,
+  getRejectedTours,
   rejectTour,
 } from '../../controllers/AdminController/tourController.js';
 
@@ -12,6 +14,12 @@ const router = express.Router();
 
 // Get all pending tours for review
 router.get('/pending', getPendingTours);
+
+// Get all approved tours
+router.get('/approved', getApprovedTours);
+
+// Get all rejected tours
+router.get('/rejected', getRejectedTours);
 
 // Get all tours (approved, pending, rejected)
 router.get('/all', getAllTours);

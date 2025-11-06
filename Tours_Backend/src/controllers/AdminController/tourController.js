@@ -23,6 +23,30 @@ export const getPendingTours = async (req, res) => {
   }
 };
 
+export const getApprovedTours = async (req, res) => {
+  try {
+    const approvedTours = await Tour.find({ status: 'approved' })
+      .populate('guide', 'name email')
+      .sort({ createdAt: -1 });
+    res.json({ tours: approvedTours });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getRejectedTours = async (req, res) => {
+  try {
+    const rejectedTours = await Tour.find({ status: 'rejected' })
+      .populate('guide', 'name email')
+      .sort({ createdAt: -1 });
+    res.json({ tours: rejectedTours });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const getAllTours = async (req, res) => {
   try {
     const tours = await Tour.find({})
