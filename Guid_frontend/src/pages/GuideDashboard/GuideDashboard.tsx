@@ -112,8 +112,11 @@ const GuideDashboard = () => {
               >
                 + Add New Tour
               </button>
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                📅 View Calendar
+              <button 
+                onClick={() => navigate('/tours/manage')}
+                className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                � View All Tours
               </button>
               <button className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 👥 Manage Customers

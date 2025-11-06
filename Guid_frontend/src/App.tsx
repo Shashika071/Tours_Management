@@ -1,6 +1,7 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router";
 
 import Alerts from "./pages/UiElements/Alerts";
+import AllTours from "./pages/GuideDashboard/AllTours";
 import AppLayout from "./layout/AppLayout";
 import Avatars from "./pages/UiElements/Avatars";
 import Badges from "./pages/UiElements/Badges";
@@ -38,7 +39,7 @@ export default function App() {
 
             {/* Tours Management */}
             <Route path="/tours/add" element={<CreateTour />} />
-            <Route path="/tours/manage" element={<PlaceholderPage title="All Tours" description="Manage and edit all your tour listings." />} />
+            <Route path="/tours/manage" element={<AllTours />} />
             <Route path="/tours/categories" element={<PlaceholderPage title="Tour Categories" description="Organize tours by categories and types." />} />
             <Route path="/tours/locations" element={<PlaceholderPage title="Tour Locations" description="Manage tour destinations and locations." />} />
             <Route path="/tours/calendar" element={<PlaceholderPage title="Tour Calendar" description="Visual calendar showing all scheduled tours." />} />

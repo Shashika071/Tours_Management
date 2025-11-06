@@ -27,6 +27,7 @@ interface Tour {
 
 const Tours: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>([]);
+  const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [rejectingTour, setRejectingTour] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,12 @@ const Tours: React.FC = () => {
     rejected: 0,
     all: 0
   });
+
+  // Filter states
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [guideFilter, setGuideFilter] = useState<string>('all');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
 
   const fetchTours = useCallback(async () => {
     try {
@@ -104,6 +111,37 @@ const Tours: React.FC = () => {
   useEffect(() => {
     fetchTours();
   }, [fetchTours]);
+
+  // Apply filters whenever tours or filter states change
+  useEffect(() => {
+    let filtered = [...tours];
+
+    if (difficultyFilter !== 'all') {
+      filtered = filtered.filter(tour => tour.difficulty === difficultyFilter);
+    }
+
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(tour => tour.category === categoryFilter);
+    }
+
+    if (guideFilter !== 'all') {
+      filtered = filtered.filter(tour => tour.guide._id === guideFilter);
+    }
+
+    if (activeFilter !== 'all') {
+      const isActive = activeFilter === 'active';
+      filtered = filtered.filter(tour => tour.isActive === isActive);
+    }
+
+    setFilteredTours(filtered);
+  }, [tours, difficultyFilter, categoryFilter, guideFilter, activeFilter]);
+
+  const resetFilters = () => {
+    setDifficultyFilter('all');
+    setCategoryFilter('all');
+    setGuideFilter('all');
+    setActiveFilter('all');
+  };
 
   useEffect(() => {
     fetchTourCounts();
@@ -256,11 +294,122 @@ const Tours: React.FC = () => {
         </button>
       </div>
 
-      {tours.length === 0 ? (
+      {/* Filters */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Additional Filters</h3>
+          <button
+            onClick={resetFilters}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Reset All
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Difficulty Filter */}
+          <div>
+            <label htmlFor="difficulty-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Difficulty
+            </label>
+            <select
+              id="difficulty-filter"
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Difficulties</option>
+              <option value="Easy">Easy</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Challenging">Challenging</option>
+              <option value="Expert">Expert</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <label htmlFor="category-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <select
+              id="category-filter"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Categories</option>
+              <option value="Adventure">Adventure</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Nature">Nature</option>
+              <option value="City">City</option>
+              <option value="Beach">Beach</option>
+              <option value="Mountain">Mountain</option>
+              <option value="Historical">Historical</option>
+              <option value="Food">Food</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Guide Filter */}
+          <div>
+            <label htmlFor="guide-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Guide
+            </label>
+            <select
+              id="guide-filter"
+              value={guideFilter}
+              onChange={(e) => setGuideFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Guides</option>
+              {Array.from(new Set(tours.map(tour => tour.guide._id)))
+                .map(guideId => {
+                  const guide = tours.find(tour => tour.guide._id === guideId)?.guide;
+                  return guide ? (
+                    <option key={guideId} value={guideId}>
+                      {guide.name} ({guide.email})
+                    </option>
+                  ) : null;
+                })}
+            </select>
+          </div>
+
+          {/* Active Status Filter */}
+          <div>
+            <label htmlFor="active-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Active Status
+            </label>
+            <select
+              id="active-filter"
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Tours</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Filter Summary */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-600">
+            Showing {filteredTours.length} of {tours.length} tours
+            {(difficultyFilter !== 'all' || categoryFilter !== 'all' || guideFilter !== 'all' || activeFilter !== 'all') && (
+              <span className="ml-2 text-blue-600">
+                (filtered)
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {filteredTours.length === 0 ? (
         <p>No tours to display.</p>
       ) : (
         <div className="grid gap-6">
-          {tours.map((tour) => (
+          {filteredTours.map((tour) => (
             <div key={tour._id} className="bg-white p-6 rounded-lg shadow-md border">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
