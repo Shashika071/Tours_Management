@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/tours_management
+      - JWT_SECRET=${JWT_SECRET}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - BACKEND_URL=${BACKEND_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - GUID_FRONTEND_URL=${GUID_FRONTEND_URL}
+      - MANAGER_FRONTEND_URL=${MANAGER_FRONTEND_URL}
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./public/uploads:/app/public/uploads
+    command: npm run dev
+    networks:
+      - tours-network
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=tours_management
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - tours-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  tours-network:
+    driver: bridge
