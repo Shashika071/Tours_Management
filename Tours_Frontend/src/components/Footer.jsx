@@ -6,14 +6,20 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Company Info */}
           <div>
-            <h3 className="text-2xl font-bold mb-4">🌍 TourHub</h3>
-            <p className="text-gray-400 mb-4">
+            <div className="flex items-center justify-start mb-4">
+              <img
+                src="/logo.png"
+                alt="GuideBeeLK Logo"
+                className="h-20 object-contain"
+              />
+            </div>
+            <p className="text-gray-400 mb-4 text-left">
               Your trusted partner in creating unforgettable travel experiences around the world.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 mt-4">
               <a href="#" className="text-gray-400 hover:text-primary transition-colors">
                 <FaFacebook className="text-2xl" />
               </a>
@@ -97,14 +103,15 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3">
                 <FaEnvelope className="text-primary" />
-                <span className="text-gray-400">info@tourhub.com</span>
+                <span className="text-gray-400">info@guidebeelk.com</span>
               </li>
             </ul>
           </div>
+          
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} TourHub. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} GuideBeeLK. All rights reserved.</p>
         </div>
       </div>
     </footer>

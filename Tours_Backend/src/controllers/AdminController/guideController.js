@@ -1,15 +1,6 @@
 import Guide from '../../models/GuidModel/Guide.js';
 import nodemailer from 'nodemailer';
-
-const createTransporter = () => {
-  return nodemailer.createTestAccount({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+import { sendEmail } from '../../utils/emailserver.js';
 
 export const getPendingGuides = async (req, res) => {
   try {
@@ -28,16 +19,7 @@ export const approveGuide = async (req, res) => {
     if (!guide) return res.status(404).json({ message: 'Guide not found' });
 
     // Send approval email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
     const mailOptions = {
-      from: process.env.EMAIL_USER,
       to: guide.email,
       subject: 'Guide Account Approved',
       html: `
@@ -52,7 +34,7 @@ export const approveGuide = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendEmail(mailOptions);
 
     res.json({ message: 'Guide approved successfully', guide });
   } catch (error) {
@@ -74,16 +56,7 @@ export const rejectGuide = async (req, res) => {
     if (!guide) return res.status(404).json({ message: 'Guide not found' });
 
     // Send rejection email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
     const mailOptions = {
-      from: process.env.EMAIL_USER,
       to: guide.email,
       subject: 'Guide Account Application Update',
       html: `
@@ -100,7 +73,7 @@ export const rejectGuide = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendEmail(mailOptions);
 
     res.json({ message: 'Guide rejected successfully', guide });
   } catch (error) {

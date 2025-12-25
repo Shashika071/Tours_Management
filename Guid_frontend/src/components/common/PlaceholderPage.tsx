@@ -8,7 +8,7 @@ interface PlaceholderPageProps {
 const PlaceholderPage = ({ title, description }: PlaceholderPageProps) => {
   return (
     <>
-      <PageMeta title={`${title} | TourHub Admin`} description={description} />
+      <PageMeta title={`${title} | GuideBeeLK Admin`} description={description} />
 
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">

@@ -158,7 +158,7 @@ const AllTours: React.FC = () => {
   return (
     <>
       <PageMeta
-        title="All Tours | TourHub Guide"
+        title="All Tours | GuideBeeLK Guide"
         description="View and manage all your tour listings"
       />
 

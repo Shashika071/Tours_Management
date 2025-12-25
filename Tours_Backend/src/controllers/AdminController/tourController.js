@@ -1,15 +1,6 @@
 import Tour from '../../models/GuidModel/Tour.js';
 import nodemailer from 'nodemailer';
-
-const createTransporter = () => {
-  return nodemailer.createTestAccount({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+import { sendEmail } from '../../utils/emailserver.js';
 
 export const getPendingTours = async (req, res) => {
   try {
@@ -69,16 +60,7 @@ export const approveTour = async (req, res) => {
 
     // Send approval email to guide
     try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-
       const mailOptions = {
-        from: process.env.EMAIL_USER,
         to: tour.guide.email,
         subject: 'Tour Approved',
         html: `
@@ -93,7 +75,7 @@ export const approveTour = async (req, res) => {
         `,
       };
 
-      await transporter.sendMail(mailOptions);
+      await sendEmail(mailOptions);
     } catch (emailError) {
       console.error('Failed to send approval email:', emailError);
       // Don't fail the request if email fails
@@ -128,16 +110,7 @@ export const rejectTour = async (req, res) => {
 
     // Send rejection email to guide
     try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-
       const mailOptions = {
-        from: process.env.EMAIL_USER,
         to: tour.guide.email,
         subject: 'Tour Rejected',
         html: `
@@ -155,7 +128,7 @@ export const rejectTour = async (req, res) => {
         `,
       };
 
-      await transporter.sendMail(mailOptions);
+      await sendEmail(mailOptions);
     } catch (emailError) {
       console.error('Failed to send rejection email:', emailError);
       // Don't fail the request if email fails

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import passport from 'passport';
 import { randomBytes } from 'node:crypto';
+import { sendEmail } from '../../utils/emailserver.js';
 import { validationResult } from 'express-validator';
 
 const generateToken = (userId) => {
@@ -27,6 +28,35 @@ export const register = async (req, res) => {
     await user.save();
 
     const token = generateToken(user._id.toString());
+
+    // Send welcome email
+    try {
+      const welcomeMailOptions = {
+        to: email,
+        subject: 'Welcome to GuideBeeLK!',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #28a745;">Welcome to GuideBeeLK, ${name}!</h2>
+            <p>Thank you for registering with us. Your account has been created successfully.</p>
+            <p>You can now:</p>
+            <ul>
+              <li>Browse and book amazing tours</li>
+              <li>Manage your bookings</li>
+              <li>Leave reviews and ratings</li>
+              <li>Contact our support team</li>
+            </ul>
+            <p>If you have any questions, feel free to contact our support team.</p>
+            <p>Happy traveling!</p>
+            <p>Best regards,<br>GuideBeeLK Team</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(welcomeMailOptions);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail registration if email fails
+    }
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -100,17 +130,6 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Create email transporter
-const createTransporter = () => {
-  return nodemailer.createTestAccount({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
-
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -130,17 +149,9 @@ export const forgotPassword = async (req, res) => {
     await user.save();
 
     // Send reset email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
       to: email,
       subject: 'Password Reset Request',
       html: `
@@ -156,7 +167,7 @@ export const forgotPassword = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendEmail(mailOptions);
 
     res.json({ message: 'Password reset email sent successfully' });
   } catch (error) {

@@ -41,7 +41,7 @@ const About = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              About TourHub
+              About GuideBeeLK
             </motion.h2>
             <motion.p 
               className="text-lg text-white/90 mb-6 leading-relaxed"

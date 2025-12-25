@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { randomBytes } from 'node:crypto';
+import { sendEmail } from '../../utils/emailserver.js';
 import { validationResult } from 'express-validator';
 
 const generateToken = (userId) => {
@@ -24,6 +25,35 @@ export const register = async (req, res) => {
 
     const guide = new Guide({ name, email, password: hashedPassword });
     await guide.save();
+
+    // Send welcome email
+    try {
+      const welcomeMailOptions = {
+        to: email,
+        subject: 'Welcome to GuideBeeLK - Guide Application Submitted!',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #28a745;">Welcome to GuideBeeLK, ${name}!</h2>
+            <p>Thank you for applying to become a guide with GuideBeeLK.</p>
+            <p>Your application has been submitted successfully and is currently under review by our administrators.</p>
+            <p><strong>What happens next:</strong></p>
+            <ul>
+              <li>Our team will review your application</li>
+              <li>You will receive an email once approved</li>
+              <li>Once approved, you can start creating and managing tours</li>
+            </ul>
+            <p>You will be notified via email about your application status. This usually takes 1-2 business days.</p>
+            <p>If you have any questions, feel free to contact our support team.</p>
+            <p>Best regards,<br>GuideBeeLK Team</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(welcomeMailOptions);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail registration if email fails
+    }
 
     res.status(201).json({
       message: 'Guide registered successfully. Waiting for manager approval.',
@@ -102,17 +132,6 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Create email transporter
-const createTransporter = () => {
-  return nodemailer.createTransporter({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
-
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -132,17 +151,9 @@ export const forgotPassword = async (req, res) => {
     await guide.save();
 
     // Send reset email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
     const resetUrl = `${process.env.GUID_FRONTEND_URL}/reset-password/${resetToken}`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
       to: email,
       subject: 'Password Reset Request',
       html: `
@@ -158,7 +169,7 @@ export const forgotPassword = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendEmail(mailOptions);
 
     res.json({ message: 'Password reset email sent successfully' });
   } catch (error) {

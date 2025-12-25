@@ -108,6 +108,6 @@ export const testimonials = [
     location: 'Madrid, Spain',
     rating: 5,
     image: 'https://ui-avatars.com/api/?name=David+Rodriguez&background=10B981&color=fff&size=200',
-    text: 'The Greek Islands cruise was a dream come true! Beautiful scenery, delicious food, and wonderful company. TourHub made everything seamless.',
+    text: 'The Greek Islands cruise was a dream come true! Beautiful scenery, delicious food, and wonderful company. GuideBeeLK made everything seamless.',
   },
 ];

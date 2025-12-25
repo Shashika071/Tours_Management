@@ -104,7 +104,7 @@ const FloatingButtons = () => {
                     <FaComments className="text-xl" />
                   </div>
                   <div>
-                    <h3 className="font-bold">TourHub Support</h3>
+                    <h3 className="font-bold">GuideBeeLK Support</h3>
                     <p className="text-xs text-white/80">Online • Reply in minutes</p>
                   </div>
                 </div>

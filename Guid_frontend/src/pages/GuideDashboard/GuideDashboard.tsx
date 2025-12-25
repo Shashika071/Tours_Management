@@ -6,7 +6,7 @@ const GuideDashboard = () => {
   return (
     <>
       <PageMeta
-        title="Guide Management Dashboard | TourHub Admin"
+        title="Guide Management Dashboard | GuideBeeLK Admin"
         description="Tourism Guide Management Dashboard - Overview of tours, bookings, and business metrics"
       />
 

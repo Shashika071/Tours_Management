@@ -96,15 +96,15 @@ const Navbar = ({ isHomePage = false }) => {
           <div className="flex justify-between items-center h-20">
             <Link to="/" className="flex items-center space-x-3 group">
               <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-                className={`text-3xl ${isHomePage && !scrolled ? 'text-white' : 'text-primary'}`}
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.3 }}
               >
-                ✈️
+                <img
+                  src="/logo.png"
+                  alt="GuideBeeLK Logo"
+                  className="h-12 object-contain"
+                />
               </motion.div>
-              <span className={`text-2xl font-bold ${isHomePage && !scrolled ? 'text-white' : 'bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent'}`}>
-                TourHub
-              </span>
             </Link>
 
             <div className="hidden lg:flex items-center space-x-8">
@@ -169,11 +169,17 @@ const Navbar = ({ isHomePage = false }) => {
                     onClick={handleAuthClick}
                     className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors"
                   >
-                    <img
-                      src={user.profileImage ? (user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${user.profileImage}`) : `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=3B82F6&color=fff&size=40`}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full border-2 border-primary shadow-md"
-                    />
+                    {user.profileImage ? (
+                      <img
+                        src={user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${user.profileImage}`}
+                        alt={user.name}
+                        className="w-10 h-10 rounded-full border-2 border-primary shadow-md"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full border-2 border-primary shadow-md bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                    )}
                   </motion.button>
 
                   {/* Small dropdown menu */}

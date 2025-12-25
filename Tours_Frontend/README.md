@@ -1,6 +1,6 @@
-# Tours Management - Tour Booking Website
+# GuideBeeLK - Sri Lankan Tour Guide Platform
 
-A modern, fully-featured tour booking website built with React.js, Vite, and Tailwind CSS.
+A modern, fully-featured tour booking website built with React.js, Vite, and Tailwind CSS for discovering Sri Lanka's hidden treasures.
 
 ## Features
 
