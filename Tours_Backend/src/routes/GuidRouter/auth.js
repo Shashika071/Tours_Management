@@ -27,7 +27,13 @@ const resetPasswordValidation = [
   body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
+const verifyOtpValidation = [
+  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
+  body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+];
+
 router.post('/register', registerValidation, authController.register);
+router.post('/verify-otp', verifyOtpValidation, authController.verifyOtp);
 router.post('/login', loginValidation, authController.login);
 router.get('/profile', auth, authController.getProfile);
 router.post('/profile/update', auth, upload.fields([

@@ -10,6 +10,53 @@ const generateToken = (userId) => {
   return jwt.sign({ userId, role: 'guide' }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const guide = await Guide.findOne({ email, otp, otpExpires: { $gt: new Date() } });
+    if (!guide) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+    guide.emailVerified = true;
+    guide.status = 'pending';
+    guide.otp = null;
+    guide.otpExpires = null;
+    await guide.save();
+
+    // Send notification to manager
+    try {
+      const managerMailOptions = {
+        to: process.env.EMAIL_USER,
+        subject: 'New Guide Registration Request',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #007bff;">New Guide Registration</h2>
+            <p>A new guide has completed email verification and is waiting for approval.</p>
+            <p><strong>Guide Details:</strong></p>
+            <ul>
+              <li>Name: ${guide.name}</li>
+              <li>Email: ${guide.email}</li>
+              <li>Registration Date: ${guide.createdAt.toLocaleDateString()}</li>
+            </ul>
+            <p>Please review and approve the guide application in the admin panel.</p>
+            <p>Best regards,<br>GuideBeeLK System</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(managerMailOptions);
+    } catch (emailError) {
+      console.error('Failed to send manager notification:', emailError);
+      // Don't fail verification if notification fails
+    }
+
+    res.json({ message: 'Email verified successfully. Waiting for manager approval.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const register = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -18,46 +65,54 @@ export const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     const existingGuide = await Guide.findOne({ email });
-    if (existingGuide) return res.status(400).json({ message: 'Guide already exists' });
+    if (existingGuide && existingGuide.emailVerified) return res.status(400).json({ message: 'Guide already exists' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const guide = new Guide({ name, email, password: hashedPassword });
-    await guide.save();
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Send welcome email
+    if (existingGuide) {
+      // Update existing unverified guide
+      existingGuide.name = name;
+      existingGuide.password = hashedPassword;
+      existingGuide.otp = otp;
+      existingGuide.otpExpires = otpExpires;
+      await existingGuide.save();
+    } else {
+      const guide = new Guide({ name, email, password: hashedPassword, otp, otpExpires });
+      await guide.save();
+    }
+
+    // Send OTP email
     try {
-      const welcomeMailOptions = {
+      const otpMailOptions = {
         to: email,
-        subject: 'Welcome to GuideBeeLK - Guide Application Submitted!',
+        subject: 'GuideBeeLK - Email Verification OTP',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #28a745;">Welcome to GuideBeeLK, ${name}!</h2>
-            <p>Thank you for applying to become a guide with GuideBeeLK.</p>
-            <p>Your application has been submitted successfully and is currently under review by our administrators.</p>
-            <p><strong>What happens next:</strong></p>
-            <ul>
-              <li>Our team will review your application</li>
-              <li>You will receive an email once approved</li>
-              <li>Once approved, you can start creating and managing tours</li>
-            </ul>
-            <p>You will be notified via email about your application status. This usually takes 1-2 business days.</p>
-            <p>If you have any questions, feel free to contact our support team.</p>
+            <h2 style="color: #007bff;">Email Verification</h2>
+            <p>Hello ${name},</p>
+            <p>Thank you for registering with GuideBeeLK. To complete your registration, please verify your email address.</p>
+            <p><strong>Your OTP code is: <span style="font-size: 24px; color: #28a745;">${otp}</span></strong></p>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request this, please ignore this email.</p>
             <p>Best regards,<br>GuideBeeLK Team</p>
           </div>
         `,
       };
 
-      await sendEmail(welcomeMailOptions);
+      await sendEmail(otpMailOptions);
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
-      // Don't fail registration if email fails
+      console.error('Failed to send OTP email:', emailError);
+      return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
 
     res.status(201).json({
-      message: 'Guide registered successfully. Waiting for manager approval.',
-      guide: { id: guide._id, name: guide.name, email: guide.email, status: guide.status },
+      message: 'Registration initiated. Please check your email for OTP verification.',
+      email: email,
     });
   } catch (error) {
     console.error(error);
@@ -70,6 +125,10 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     const guide = await Guide.findOne({ email });
     if (!guide) return res.status(400).json({ message: 'Invalid credentials' });
+
+    if (!guide.emailVerified) {
+      return res.status(403).json({ message: 'Please verify your email first.' });
+    }
 
     if (guide.status !== 'approved') {
       return res.status(403).json({ message: 'Account not approved yet. Please wait for manager approval.' });
@@ -239,17 +298,40 @@ export const updateProfileDetails = async (req, res) => {
     const updateData = {};
     const requiresReApproval = processProfileUpdates(req, guide, updateData);
 
-    // Mark profile as completed
+    // Mark profile as completed and clear previous rejection reason
     updateData.profileCompleted = true;
+    updateData.profileRejectionReason = null;
 
     const updatedGuide = await Guide.findByIdAndUpdate(guideId, updateData, { new: true });
     if (!updatedGuide) return res.status(404).json({ message: 'Guide not found' });
+
+    if (requiresReApproval) {
+      try {
+        const managerMailOptions = {
+          to: process.env.EMAIL_USER,
+          subject: 'Guide Profile Update: Approval Required',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #007bff;">Profile Update Requiring Approval</h2>
+              <p>Guide <strong>${guide.name}</strong> (${guide.email}) has updated sensitive information in their profile.</p>
+              <p>These changes require your review and approval before they take effect.</p>
+              <p>Please log in to the admin panel to review the changes.</p>
+              <p>Best regards,<br>GuideBeeLK System</p>
+            </div>
+          `,
+        };
+        await sendEmail(managerMailOptions);
+      } catch (emailError) {
+        console.error('Failed to send manager update notification:', emailError);
+      }
+    }
 
     res.json({
       message: 'Profile details updated successfully',
       guide: updatedGuide,
       requiresReApproval,
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

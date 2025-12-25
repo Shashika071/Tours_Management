@@ -137,26 +137,31 @@ const GeneralSettings: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">General Settings</h1>
-      
+
       {/* Profile Status */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
         <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Profile Status</h3>
         <div className="flex gap-4">
-          <span className={`px-3 py-1 rounded-full text-sm ${
-            guide?.profileCompleted 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+          <span className={`px-3 py-1 rounded-full text-sm ${guide?.profileCompleted
+              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-          }`}>
+            }`}>
             {guide?.profileCompleted ? 'Profile Completed' : 'Profile Incomplete'}
           </span>
-          <span className={`px-3 py-1 rounded-full text-sm ${
-            guide?.profileApproved 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+          <span className={`px-3 py-1 rounded-full text-sm ${guide?.profileApproved
+              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-          }`}>
+            }`}>
             {guide?.profileApproved ? 'Profile Approved' : 'Awaiting Approval'}
           </span>
         </div>
+
+        {guide?.profileRejectionReason && (
+          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded text-sm text-red-700 dark:text-red-200">
+            <p className="font-bold">Rejection Reason:</p>
+            <p>{guide.profileRejectionReason}</p>
+          </div>
+        )}
       </div>
 
       <Form onSubmit={handleSubmit} className="space-y-6">
@@ -309,10 +314,10 @@ const GeneralSettings: React.FC = () => {
             <FileInput onChange={handleFileChange(setIdFront)} />
             {guide?.idFrontImage && (
               <div className="mt-2">
-                <a 
-                  href={`${import.meta.env.VITE_API_URL}${guide.idFrontImage}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={`${import.meta.env.VITE_API_URL}${guide.idFrontImage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline text-sm inline-flex items-center"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,10 +338,10 @@ const GeneralSettings: React.FC = () => {
             <FileInput onChange={handleFileChange(setIdBack)} />
             {guide?.idBackImage && (
               <div className="mt-2">
-                <a 
-                  href={`${import.meta.env.VITE_API_URL}${guide.idBackImage}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={`${import.meta.env.VITE_API_URL}${guide.idBackImage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline text-sm inline-flex items-center"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,10 +362,10 @@ const GeneralSettings: React.FC = () => {
             <FileInput onChange={handleFileChange(setCertificate)} />
             {guide?.certificateImage && (
               <div className="mt-2">
-                <a 
-                  href={`${import.meta.env.VITE_API_URL}${guide.certificateImage}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={`${import.meta.env.VITE_API_URL}${guide.certificateImage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline text-sm inline-flex items-center"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

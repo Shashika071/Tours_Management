@@ -25,6 +25,7 @@ interface Guide {
   taxId?: string;
   profileCompleted: boolean;
   profileApproved: boolean;
+  profileRejectionReason?: string;
   status: string;
 }
 

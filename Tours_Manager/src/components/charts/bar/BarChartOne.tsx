@@ -1,5 +1,5 @@
-import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
+import Chart from "react-apexcharts";
 
 export default function BarChartOne() {
   const options: ApexOptions = {
@@ -136,9 +136,6 @@ export default function BarChartOne() {
         },
       },
     ],
-  };
-      },
-    },
     legend: {
       show: true,
       position: "top",

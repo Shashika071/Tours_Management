@@ -1,5 +1,10 @@
 import ResetPassword from "../../components/auth/ResetPassword";
+import AuthLayout from "./AuthPageLayout";
 
 export default function ResetPasswordPage() {
-  return <ResetPassword />;
+  return (
+    <AuthLayout>
+      <ResetPassword />
+    </AuthLayout>
+  );
 }

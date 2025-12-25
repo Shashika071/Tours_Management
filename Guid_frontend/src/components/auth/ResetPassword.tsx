@@ -1,5 +1,5 @@
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 
 import Button from "../ui/button/Button";
@@ -8,6 +8,8 @@ import Label from "../form/Label";
 
 export default function ResetPassword() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,7 +29,7 @@ export default function ResetPassword() {
   const verifyToken = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/guide/auth/verify-reset-token/${token}`);
-      const data = await response.json();
+      await response.json();
       if (response.ok) {
         setValidToken(true);
       } else {
@@ -72,6 +74,10 @@ export default function ResetPassword() {
       }
 
       setMessage("Password reset successfully. You can now sign in with your new password.");
+      setTimeout(() => {
+        navigate("/signin");
+      }, 3000);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

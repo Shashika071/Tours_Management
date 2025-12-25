@@ -15,5 +15,6 @@ router.put('/:guideId/reject', guideController.rejectGuide);
 router.get('/', guideController.getAllGuides);
 router.get('/profile-review', guideController.getGuidesForProfileReview);
 router.put('/:guideId/approve-profile', guideController.approveGuideProfile);
+router.put('/:guideId/reject-profile', guideController.rejectGuideProfile);
 
 export default router;

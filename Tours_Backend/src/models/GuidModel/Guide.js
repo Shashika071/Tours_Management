@@ -108,10 +108,26 @@ const GuideSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    profileRejectionReason: {
+      type: String,
+      default: null,
+    },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      enum: ['unverified', 'pending', 'approved', 'rejected'],
+      default: 'unverified',
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    otp: {
+      type: String,
+      default: null,
+    },
+    otpExpires: {
+      type: Date,
+      default: null,
     },
     resetPasswordToken: {
       type: String,
