@@ -169,13 +169,11 @@ const Hero = () => {
       </div>
 
       {/* Enhanced Scroll Indicator */}
-      <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
-        <div className="flex flex-col items-center gap-1 sm:gap-2">
-          <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/50 rounded-full flex justify-center">
-            <div className="w-1 h-2 sm:h-3 bg-white rounded-full mt-1 sm:mt-2 animate-scroll"></div>
-          </div>
-          <span className="text-white/70 text-xs font-medium">Scroll Down</span>
+      <div className="hidden md:flex absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-10 animate-bounce flex-col items-center gap-1 sm:gap-2">
+        <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/50 rounded-full flex justify-center">
+          <div className="w-1 h-2 sm:h-3 bg-white rounded-full mt-1 sm:mt-2 animate-scroll"></div>
         </div>
+        <span className="text-white/70 text-xs font-medium">Scroll Down</span>
       </div>
 
       {/* Background Indicator Dots */}

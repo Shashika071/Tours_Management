@@ -1,5 +1,5 @@
-import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
+import Chart from "react-apexcharts";
 
 export default function LineChartOne() {
   const options: ApexOptions = {
@@ -80,6 +80,13 @@ export default function LineChartOne() {
       axisTicks: {
         show: false, // Hide x-axis ticks
       },
+      labels: {
+        style: {
+          fontSize: "12px",
+          colors: ["#6B7280"],
+        },
+        rotate: -45,
+      },
       tooltip: {
         enabled: false, // Disable tooltip for x-axis points
       },
@@ -98,6 +105,57 @@ export default function LineChartOne() {
         },
       },
     },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: {
+            height: 280,
+          },
+          xaxis: {
+            labels: {
+              rotate: -90,
+              style: {
+                fontSize: "10px",
+              },
+            },
+          },
+          yaxis: {
+            labels: {
+              style: {
+                fontSize: "10px",
+              },
+            },
+          },
+        },
+      },
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            height: 250,
+          },
+          xaxis: {
+            labels: {
+              rotate: -90,
+              style: {
+                fontSize: "9px",
+              },
+            },
+          },
+          yaxis: {
+            labels: {
+              style: {
+                fontSize: "9px",
+              },
+            },
+          },
+          legend: {
+            show: false,
+          },
+        },
+      },
+    ],
   };
 
   const series = [
@@ -111,8 +169,8 @@ export default function LineChartOne() {
     },
   ];
   return (
-    <div className="max-w-full overflow-x-auto custom-scrollbar">
-      <div id="chartEight" className="min-w-[1000px]">
+    <div className="w-full overflow-x-auto">
+      <div className="min-w-0 sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px]">
         <Chart options={options} series={series} type="area" height={310} />
       </div>
     </div>

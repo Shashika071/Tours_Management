@@ -49,6 +49,95 @@ export default function BarChartOne() {
       axisTicks: {
         show: false,
       },
+      labels: {
+        style: {
+          fontSize: "12px",
+          colors: ["#6B7280"],
+        },
+        rotate: -45,
+      },
+    },
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "left",
+      fontFamily: "Outfit",
+    },
+    yaxis: {
+      title: {
+        text: undefined,
+      },
+      labels: {
+        style: {
+          fontSize: "12px",
+          colors: ["#6B7280"],
+        },
+      },
+    },
+    grid: {
+      yaxis: {
+        lines: {
+          show: true,
+        },
+      },
+    },
+    fill: {
+      opacity: 1,
+    },
+    tooltip: {
+      x: {
+        show: false,
+      },
+      y: {
+        formatter: (val: number) => `${val}`,
+      },
+    },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: {
+            height: 200,
+          },
+          plotOptions: {
+            bar: {
+              columnWidth: "60%",
+            },
+          },
+          xaxis: {
+            labels: {
+              rotate: -90,
+              style: {
+                fontSize: "10px",
+              },
+            },
+          },
+        },
+      },
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            height: 250,
+          },
+          plotOptions: {
+            bar: {
+              columnWidth: "80%",
+            },
+          },
+          xaxis: {
+            labels: {
+              rotate: -90,
+              style: {
+                fontSize: "9px",
+              },
+            },
+          },
+        },
+      },
+    ],
+  };
+      },
     },
     legend: {
       show: true,
@@ -88,8 +177,8 @@ export default function BarChartOne() {
     },
   ];
   return (
-    <div className="max-w-full overflow-x-auto custom-scrollbar">
-      <div id="chartOne" className="min-w-[1000px]">
+    <div className="w-full overflow-x-auto">
+      <div className="min-w-0 sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px]">
         <Chart options={options} series={series} type="bar" height={180} />
       </div>
     </div>
