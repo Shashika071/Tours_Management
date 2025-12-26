@@ -29,7 +29,6 @@ const AllTours: React.FC = () => {
   const navigate = useNavigate();
   const { tours, loading, refetchTours } = useTour();
   const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
-  const [expandedTour] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
 
@@ -83,20 +82,6 @@ const AllTours: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy':
-        return 'bg-green-100 text-green-800';
-      case 'Moderate':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Challenging':
-        return 'bg-orange-100 text-orange-800';
-      case 'Expert':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const handleEdit = (tourId: string) => {
     const tour = tours.find(t => t._id === tourId);
@@ -313,134 +298,164 @@ const AllTours: React.FC = () => {
         </div>
 
         {filteredTours.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 text-center shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="text-6xl mb-4">🗺️</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No tours yet</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              You haven't created any tours yet. Start by creating your first tour!
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="text-7xl mb-6">🗺️</div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No tours found</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
+              Try adjusting your filters or create a new listing to get started.
             </p>
             <button
               onClick={() => navigate('/tours/add')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-200 dark:shadow-none"
             >
-              Create Your First Tour
+              + Create New Tour
             </button>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="space-y-4">
             {filteredTours.map((tour) => (
-              <div key={tour._id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="mb-4">
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{tour.title}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Created: {new Date(tour.createdAt).toLocaleDateString()}
+              <div key={tour._id} className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-700 transition-all duration-200 overflow-hidden">
+                <div className="p-5 md:p-6">
+                  {/* Top Header Section */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                          {tour.title}
+                        </h3>
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColor(tour.status)}`}>
+                          {tour.status.replace('_', ' ')}
+                        </span>
+                        {!tour.isActive && (
+                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                        Added on {new Date(tour.createdAt).toLocaleDateString()}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Price:</span>
-                        <p className="text-lg font-semibold text-gray-900 dark:text-white">${tour.price}</p>
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price / Person</p>
+                        <p className="text-2xl font-black text-brand-600 tracking-tighter">${tour.price}</p>
                       </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Duration:</span>
-                        <p className="text-gray-900 dark:text-white">{tour.duration}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Location:</span>
-                        <p className="text-gray-900 dark:text-white">{tour.location}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(tour.difficulty)}`}>
-                          {tour.difficulty}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Category:</span>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
-                          {tour.category}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tour.status)}`}>
-                          {tour.status.charAt(0).toUpperCase() + tour.status.slice(1)}
-                        </span>
+                      <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden lg:block"></div>
+                      <div className="flex gap-2">
+                        {tour.status === 'approved' && (
+                          <button
+                            onClick={() => navigate(`/tours/promote/new?tourId=${tour._id}`)}
+                            className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            Promote
+                          </button>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-                    <div className="mb-4">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Description:</span>
-                      <p className={`text-gray-700 dark:text-gray-300 mt-1 ${expandedTour === tour._id ? '' : 'line-clamp-3'}`}>
-                        {tour.description}
-                      </p>
-                    </div>
-
-                    {tour.rejectionReason && (
-                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                        <span className="text-sm font-medium text-red-700 dark:text-red-400">Rejection Reason:</span>
-                        <p className="text-red-700 dark:text-red-400 mt-1">{tour.rejectionReason}</p>
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6 py-4 border-y border-gray-50 dark:border-gray-700/50">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Location</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.location}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-50 dark:bg-orange-900/10 rounded-lg">
+                        <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Duration</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.duration}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Category</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.category}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
+                        <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Level</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.difficulty}</p>
+                      </div>
+                    </div>
+                  </div>
 
-                    {/* Action Buttons */}
-                    <div className="mt-4 flex flex-wrap gap-2">
+                  {/* Footer Actions Section */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-1 flex-1">
+                      {tour.description}
+                    </p>
+
+                    <div className="flex items-center gap-3 flex-shrink-0">
                       <button
                         onClick={() => handleViewDetails(tour)}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium underline"
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
                       >
-                        View Details
+                        Details
                       </button>
-
-                      {/* Edit Button - available for all statuses, but may require permission for approved */}
                       <button
                         onClick={() => handleEdit(tour._id)}
-                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-medium underline"
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-colors"
                       >
                         Edit
                       </button>
-
-                      {/* Delete Button - available for all statuses except pending_deletion */}
-                      {tour.status !== 'pending_deletion' && (
-                        <button
-                          onClick={() => handleDelete(tour._id)}
-                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium underline"
-                        >
-                          Delete
-                        </button>
-                      )}
-
-                      {/* Pending Deletion Status Indicator */}
-                      {tour.status === 'pending_deletion' && (
-                        <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">
-                          Pending Manager Approval
-                        </span>
-                      )}
-
-                      {/* Resubmit Button - only for rejected tours */}
                       {tour.status === 'rejected' && (
                         <button
                           onClick={() => handleResubmit(tour._id)}
-                          className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium underline"
+                          className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-purple-600 hover:text-purple-700 transition-colors"
                         >
                           Resubmit
                         </button>
                       )}
-
-                      {/* Promote Button - only for approved tours */}
-                      {tour.status === 'approved' && (
+                      {tour.status !== 'pending_deletion' ? (
                         <button
-                          onClick={() => navigate(`/tours/promote/new?tourId=${tour._id}`)}
-                          className="text-brand-600 hover:text-brand-800 dark:text-brand-400 dark:hover:text-brand-300 text-sm font-medium underline"
+                          onClick={() => handleDelete(tour._id)}
+                          className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors"
                         >
-                          Promote
+                          Delete
                         </button>
+                      ) : (
+                        <span className="px-4 py-2 text-xs font-black uppercase tracking-widest text-orange-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+                          Deletion Pending
+                        </span>
                       )}
                     </div>
                   </div>
+
+                  {tour.rejectionReason && (
+                    <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/50 rounded-xl">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1">Manager Note</p>
+                      <p className="text-sm text-red-700 dark:text-red-400 italic">{tour.rejectionReason}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

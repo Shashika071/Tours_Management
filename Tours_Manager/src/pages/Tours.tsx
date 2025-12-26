@@ -37,7 +37,6 @@ const Tours: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'all'>('pending');
-  const [expandedTour, setExpandedTour] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
   const [tourCounts, setTourCounts] = useState({
@@ -58,7 +57,7 @@ const Tours: React.FC = () => {
     try {
       const token = localStorage.getItem('adminToken');
       let endpoint = 'all';
-      
+
       if (activeTab !== 'all') {
         // Map frontend tab names to API endpoint names
         const endpointMap: { [key: string]: string } = {
@@ -299,7 +298,7 @@ const Tours: React.FC = () => {
       }
 
       // Update local state and refresh counts
-      setTours(tours.map(tour => 
+      setTours(tours.map(tour =>
         tour._id === tourId ? { ...tour, status: 'approved' as const } : tour
       ));
       setRejectingDeletionTour(null);
@@ -324,20 +323,6 @@ const Tours: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy':
-        return 'bg-green-100 text-green-800';
-      case 'Moderate':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Challenging':
-        return 'bg-orange-100 text-orange-800';
-      case 'Expert':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   if (loading) {
     return <div className="p-6">Loading...</div>;
@@ -355,51 +340,46 @@ const Tours: React.FC = () => {
       <div className="flex flex-wrap gap-4 mb-6">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            activeTab === 'pending'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'pending'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
         >
           Pending Tours ({tourCounts.pending})
         </button>
         <button
           onClick={() => setActiveTab('approved')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            activeTab === 'approved'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'approved'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
         >
           Approved Tours ({tourCounts.approved})
         </button>
         <button
           onClick={() => setActiveTab('rejected')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            activeTab === 'rejected'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'rejected'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
         >
           Rejected Tours ({tourCounts.rejected})
         </button>
         <button
           onClick={() => setActiveTab('pending_deletion')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            activeTab === 'pending_deletion'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'pending_deletion'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
         >
           Pending Deletion ({tourCounts.pending_deletion})
         </button>
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            activeTab === 'all'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'all'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
         >
           All Tours ({tourCounts.all})
         </button>
@@ -517,110 +497,152 @@ const Tours: React.FC = () => {
       </div>
 
       {filteredTours.length === 0 ? (
-        <p>No tours to display.</p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="text-7xl mb-6">🗺️</div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No tours found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
+            No tours match your current filters and selected tab.
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="space-y-4">
           {filteredTours.map((tour) => (
-            <div key={tour._id} className="bg-white p-6 rounded-lg shadow-md border">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-semibold">{tour.title}</h3>
-                    <p className="text-gray-600">Guide: {tour.guide.name} ({tour.guide.email})</p>
-                    <p className="text-sm text-gray-500">
-                      Created: {new Date(tour.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Price:</span>
-                      <p className="text-lg font-semibold">${tour.price}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Duration:</span>
-                      <p>{tour.duration}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Location:</span>
-                      <p>{tour.location}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Difficulty:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(tour.difficulty)}`}>
-                        {tour.difficulty}
+            <div key={tour._id} className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-700 transition-all duration-200 overflow-hidden">
+              <div className="p-5 md:p-6">
+                {/* Top Header Section */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                        {tour.title}
+                      </h3>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColor(tour.status)}`}>
+                        {tour.status.replace('_', ' ')}
                       </span>
+                      {!tour.isActive && (
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200">
+                          Inactive
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Category:</span>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {tour.category}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Status:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tour.status)}`}>
-                        {tour.status.charAt(0).toUpperCase() + tour.status.slice(1)}
-                      </span>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      <span>Guide: <strong className="text-gray-700 dark:text-gray-200">{tour.guide?.name}</strong></span>
+                      <span className="text-gray-300 dark:text-gray-600">|</span>
+                      <span>Added on {new Date(tour.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <span className="text-sm font-medium text-gray-500">Description:</span>
-                    <p className={`text-gray-700 mt-1 ${expandedTour === tour._id ? '' : 'line-clamp-3'}`}>
-                      {tour.description}
-                    </p>
-                  </div>
-
-                  {tour.rejectionReason && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                      <span className="text-sm font-medium text-red-700">Rejection Reason:</span>
-                      <p className="text-red-700 mt-1">{tour.rejectionReason}</p>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price / Person</p>
+                      <p className="text-2xl font-black text-brand-500 tracking-tighter">${tour.price}</p>
                     </div>
-                  )}
+                    <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden lg:block"></div>
+                    <div className="flex gap-2">
+                      {tour.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleApprove(tour._id)}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => openRejectModal(tour._id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                      {tour.status === 'pending_deletion' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleApproveDeletion(tour._id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all"
+                          >
+                            Approve Delete
+                          </button>
+                          <button
+                            onClick={() => openRejectDeletionModal(tour._id)}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all"
+                          >
+                            Deny Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-                  {/* View Details Button */}
-                  <div className="mt-4">
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6 py-4 border-y border-gray-50 dark:border-gray-700/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Location</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.location}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-50 dark:bg-orange-900/10 rounded-lg">
+                      <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Duration</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.duration}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                      <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Category</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.category}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
+                      <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Level</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{tour.difficulty}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Section */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-1 flex-1">
+                    {tour.description}
+                  </p>
+
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     <button
                       onClick={() => handleViewDetails(tour)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+                      className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
                     >
                       View Details
                     </button>
                   </div>
                 </div>
 
-                {tour.status === 'pending' && (
-                  <div className="flex flex-col space-y-2 ml-4">
-                    <button
-                      onClick={() => handleApprove(tour._id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => openRejectModal(tour._id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
-
-                {tour.status === 'pending_deletion' && (
-                  <div className="flex flex-col space-y-2 ml-4">
-                    <button
-                      onClick={() => handleApproveDeletion(tour._id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                      Confirm Delete
-                    </button>
-                    <button
-                      onClick={() => openRejectDeletionModal(tour._id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    >
-                      Reject Deletion
-                    </button>
+                {tour.rejectionReason && (
+                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/50 rounded-xl">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1">Rejection Feedback</p>
+                    <p className="text-sm text-red-700 dark:text-red-400 italic">{tour.rejectionReason}</p>
                   </div>
                 )}
               </div>
@@ -699,200 +721,219 @@ const Tours: React.FC = () => {
         </div>
       )}
 
-      {/* Tour Details Modal */}
       <Modal
         isOpen={detailsModalOpen}
         onClose={() => setDetailsModalOpen(false)}
         className="max-w-4xl max-h-[90vh] overflow-y-auto"
       >
         {selectedTourForDetails && (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-              {selectedTourForDetails.title}
-            </h2>
+          <div className="p-0">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-8 py-6 z-10 flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                    {selectedTourForDetails.title}
+                  </h2>
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColor(selectedTourForDetails.status)}`}>
+                    {selectedTourForDetails.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-medium font-mono">ID: {selectedTourForDetails._id}</p>
+              </div>
+              <button
+                onClick={() => setDetailsModalOpen(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-            {/* Tour Images */}
-            {selectedTourForDetails.images && selectedTourForDetails.images.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Images</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {selectedTourForDetails.images.slice(0, 6).map((image, index) => (
-                    <img
-                      key={index}
-                      src={`${import.meta.env.VITE_API_URL}${image}`}
-                      alt={`Tour image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                  ))}
-                  {selectedTourForDetails.images.length > 6 && (
-                    <div className="w-full h-32 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
-                      +{selectedTourForDetails.images.length - 6} more
-                    </div>
+            <div className="px-8 py-8 space-y-10">
+              {/* Image Gallery */}
+              {selectedTourForDetails.images && selectedTourForDetails.images.length > 0 && (
+                <section>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Media Gallery
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {selectedTourForDetails.images.map((image, index) => (
+                      <div key={index} className="aspect-video rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600">
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}${image}`}
+                          alt={`Tour gallery ${index + 1}`}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Core Specs Grid */}
+              <section className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-gray-50 dark:border-gray-700/50">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Location</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                    {selectedTourForDetails.location}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Duration</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {selectedTourForDetails.duration}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Difficulty</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    {selectedTourForDetails.difficulty}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Price / Person</p>
+                  <p className="text-2xl font-black text-brand-600 tracking-tighter">${selectedTourForDetails.price}</p>
+                </div>
+              </section>
+
+              {/* Guide Information Card */}
+              <section className="bg-gray-50 dark:bg-gray-900/40 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center text-brand-600 font-black text-xl">
+                    {selectedTourForDetails.guide?.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Created By Guide</p>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{selectedTourForDetails.guide?.name}</h4>
+                    <p className="text-sm text-gray-500">{selectedTourForDetails.guide?.email}</p>
+                  </div>
+                </div>
+                <div className="flex gap-8">
+                  <div className="text-center md:text-right">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Participants</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedTourForDetails.maxParticipants} Max</p>
+                  </div>
+                  <div className="text-center md:text-right">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Created Date</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{new Date(selectedTourForDetails.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Rich Content Sections */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-8">
+                  <section>
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-3">Overview</h3>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line text-sm">
+                      {selectedTourForDetails.description}
+                    </p>
+                  </section>
+
+                  {selectedTourForDetails.itinerary && (
+                    <section>
+                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-3">Detailed Itinerary</h3>
+                      <div className="p-5 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm leading-relaxed text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                        {selectedTourForDetails.itinerary}
+                      </div>
+                    </section>
+                  )}
+                </div>
+
+                <div className="space-y-8">
+                  {selectedTourForDetails.inclusions && (
+                    <section>
+                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-3">What's Included</h3>
+                      <div className="p-5 bg-green-50/50 dark:bg-green-900/10 rounded-xl border border-green-100/50 dark:border-green-900/30 text-sm text-gray-700 dark:text-gray-400 whitespace-pre-line">
+                        {selectedTourForDetails.inclusions}
+                      </div>
+                    </section>
+                  )}
+
+                  {selectedTourForDetails.exclusions && (
+                    <section>
+                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-3">What's Excluded</h3>
+                      <div className="p-5 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100/50 dark:border-red-900/30 text-sm text-gray-700 dark:text-gray-400 whitespace-pre-line">
+                        {selectedTourForDetails.exclusions}
+                      </div>
+                    </section>
+                  )}
+
+                  {selectedTourForDetails.rejectionReason && (
+                    <section>
+                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-red-500 mb-3">Manager Note / Rejection Reason</h3>
+                      <div className="p-5 bg-red-500/5 rounded-xl border border-red-500/20 text-sm text-red-700 dark:text-red-400 italic">
+                        {selectedTourForDetails.rejectionReason}
+                      </div>
+                    </section>
                   )}
                 </div>
               </div>
-            )}
 
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Basic Information</h3>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tour ID:</span>
-                    <p className="text-sm font-mono break-all text-gray-900 dark:text-white">{selectedTourForDetails._id}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Guide:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.guide.name} ({selectedTourForDetails.guide.email})</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Location:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.location}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Price:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">${selectedTourForDetails.price}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Duration:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.duration}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.difficulty}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Category:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.category}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Status & Details</h3>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedTourForDetails.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
-                      selectedTourForDetails.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
-                      selectedTourForDetails.status === 'pending_deletion' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-400' :
-                      'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                    }`}>
-                      {selectedTourForDetails.status.charAt(0).toUpperCase() + selectedTourForDetails.status.slice(1)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedTourForDetails.isActive ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-                    }`}>
-                      {selectedTourForDetails.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Max Participants:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.maxParticipants || 'Not specified'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Images:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.images ? selectedTourForDetails.images.length : 0}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Created:</span>
-                    <p className="text-sm text-gray-900 dark:text-white">{new Date(selectedTourForDetails.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Description</h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.description}</p>
-            </div>
-
-            {/* Additional Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {selectedTourForDetails.itinerary && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Itinerary</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.itinerary}</p>
-                </div>
-              )}
-
-              {selectedTourForDetails.inclusions && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Inclusions</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.inclusions}</p>
-                </div>
-              )}
-
-              {selectedTourForDetails.exclusions && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Exclusions</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.exclusions}</p>
-                </div>
-              )}
-
-              {selectedTourForDetails.rejectionReason && (
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">Rejection Reason</h3>
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-sm text-red-800 dark:text-red-300">{selectedTourForDetails.rejectionReason}</p>
-                  </div>
+              {/* Static Action Bar */}
+              {(selectedTourForDetails.status === 'pending' || selectedTourForDetails.status === 'pending_deletion') && (
+                <div className="pt-10 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                  {selectedTourForDetails.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleApprove(selectedTourForDetails._id);
+                          setDetailsModalOpen(false);
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-green-100 transition-all"
+                      >
+                        Approve Tour
+                      </button>
+                      <button
+                        onClick={() => {
+                          openRejectModal(selectedTourForDetails._id);
+                          setDetailsModalOpen(false);
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-100 transition-all"
+                      >
+                        Reject Tour
+                      </button>
+                    </>
+                  )}
+                  {selectedTourForDetails.status === 'pending_deletion' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleApproveDeletion(selectedTourForDetails._id);
+                          setDetailsModalOpen(false);
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-100 transition-all"
+                      >
+                        Confirm Delete
+                      </button>
+                      <button
+                        onClick={() => {
+                          openRejectDeletionModal(selectedTourForDetails._id);
+                          setDetailsModalOpen(false);
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-green-100 transition-all"
+                      >
+                        Reject Deletion
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
-
-            {/* Action Buttons for Pending Tours */}
-            {selectedTourForDetails.status === 'pending' && (
-              <div className="mt-6 flex gap-4">
-                <button
-                  onClick={() => {
-                    handleApprove(selectedTourForDetails._id);
-                    setDetailsModalOpen(false);
-                  }}
-                  className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
-                >
-                  Approve Tour
-                </button>
-                <button
-                  onClick={() => {
-                    openRejectModal(selectedTourForDetails._id);
-                    setDetailsModalOpen(false);
-                  }}
-                  className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600"
-                >
-                  Reject Tour
-                </button>
-              </div>
-            )}
-
-            {/* Action Buttons for Pending Deletion Tours */}
-            {selectedTourForDetails.status === 'pending_deletion' && (
-              <div className="mt-6 flex gap-4">
-                <button
-                  onClick={() => {
-                    handleApproveDeletion(selectedTourForDetails._id);
-                    setDetailsModalOpen(false);
-                  }}
-                  className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600"
-                >
-                  Confirm Delete
-                </button>
-                <button
-                  onClick={() => {
-                    openRejectDeletionModal(selectedTourForDetails._id);
-                    setDetailsModalOpen(false);
-                  }}
-                  className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
-                >
-                  Reject Deletion
-                </button>
-              </div>
-            )}
           </div>
         )}
       </Modal>
