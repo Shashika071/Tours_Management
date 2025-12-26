@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 import adminAuthRoutes from './routes/AdminRouter/auth.js';
 import adminGuideRoutes from './routes/AdminRouter/guide.js';
 import adminTourRoutes from './routes/AdminRouter/tour.js';
