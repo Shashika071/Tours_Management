@@ -49,6 +49,8 @@ const navItems: NavItem[] = [
     name: "Tour Management",
     subItems: [
       { name: "Manage Tours", path: "/tours", pro: false },
+      { name: "Promotion Types", path: "/promotions/types", pro: false },
+      { name: "Promotion Requests", path: "/promotions/requests", pro: false },
     ],
   },
   {

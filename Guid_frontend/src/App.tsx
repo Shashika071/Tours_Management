@@ -27,6 +27,8 @@ import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
+import PromoteTours from "./pages/Promotions/PromoteTours";
+import CreatePromotionRequest from "./pages/Promotions/CreatePromotionRequest";
 
 export default function App() {
   return (
@@ -42,6 +44,8 @@ export default function App() {
             <Route path="/tours/add" element={<CreateTour />} />
             <Route path="/tours/edit/:tourId" element={<EditTour />} />
             <Route path="/tours/manage" element={<AllTours />} />
+            <Route path="/tours/promote" element={<PromoteTours />} />
+            <Route path="/tours/promote/new" element={<CreatePromotionRequest />} />
             <Route path="/tours/categories" element={<PlaceholderPage title="Tour Categories" description="Organize tours by categories and types." />} />
             <Route path="/tours/locations" element={<PlaceholderPage title="Tour Locations" description="Manage tour destinations and locations." />} />
             <Route path="/tours/calendar" element={<PlaceholderPage title="Tour Calendar" description="Visual calendar showing all scheduled tours." />} />

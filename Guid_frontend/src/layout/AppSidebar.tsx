@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Add Tour", path: "/tours/add", pro: false },
       { name: "All Tours", path: "/tours/manage", pro: false },
+      { name: "Promote Tours", path: "/tours/promote", pro: false },
       { name: "Tour Calendar", path: "/tours/calendar", pro: false },
     ],
   },

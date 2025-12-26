@@ -1,6 +1,6 @@
 export const deletionRequestTemplate = (guideName, reason) => ({
-    subject: 'Account Deletion Request - Action Required',
-    html: `
+  subject: 'Account Deletion Request - Action Required',
+  html: `
     <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #d33;">Account Deletion Request</h2>
       <p>A guide has requested to delete their account.</p>
@@ -14,8 +14,8 @@ export const deletionRequestTemplate = (guideName, reason) => ({
 });
 
 export const deletionApprovedTemplate = (guideName) => ({
-    subject: 'Your Account Deletion Request - Approved',
-    html: `
+  subject: 'Your Account Deletion Request - Approved',
+  html: `
     <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #28a745;">Account Deletion Approved</h2>
       <p>Hi ${guideName},</p>
@@ -26,8 +26,8 @@ export const deletionApprovedTemplate = (guideName) => ({
 });
 
 export const deletionRejectedTemplate = (guideName, reason) => ({
-    subject: 'Your Account Deletion Request - Update',
-    html: `
+  subject: 'Your Account Deletion Request - Update',
+  html: `
     <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #ffc107;">Account Deletion Request Update</h2>
       <p>Hi ${guideName},</p>
@@ -35,6 +35,47 @@ export const deletionRejectedTemplate = (guideName, reason) => ({
       <blockquote style="background: #f9f9f9; border-left: 10px solid #ccc; margin: 1.5em 10px; padding: 0.5em 10px;">
         ${reason}
       </blockquote>
+      <p>If you have any questions, please contact support.</p>
+    </div>
+  `
+});
+
+export const promotionRequestSubmittedTemplate = (guideName, totalCost) => ({
+  subject: 'New Tour Promotion Request',
+  html: `
+    <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #007bff;">New Promotion Request</h2>
+      <p>A guide has submitted a new tour promotion request.</p>
+      <hr />
+      <p><strong>Guide Name:</strong> ${guideName}</p>
+      <p><strong>Total Cost:</strong> $${totalCost}</p>
+      <p>Please log in to the admin dashboard to review and approve this request.</p>
+      <a href="${process.env.ADMIN_DASHBOARD_URL}/promotions/requests" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
+    </div>
+  `
+});
+
+export const promotionRequestApprovedTemplate = (guideName, tourTitle, startDate, endDate) => ({
+  subject: 'Tour Promotion Approved!',
+  html: `
+    <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #28a745;">Promotion Approved</h2>
+      <p>Hi ${guideName},</p>
+      <p>Good news! Your promotion request for the tour "<strong>${tourTitle}</strong>" has been approved.</p>
+      <p><strong>Scheduled Period:</strong> ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}</p>
+      <p>Thank you for promoting with us!</p>
+    </div>
+  `
+});
+
+export const promotionRequestRejectedTemplate = (guideName, tourTitle, reason) => ({
+  subject: 'Tour Promotion Request Update',
+  html: `
+    <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #dc3545;">Promotion Request Rejected</h2>
+      <p>Hi ${guideName},</p>
+      <p>We regret to inform you that your promotion request for "<strong>${tourTitle}</strong>" was not approved.</p>
+      <p><strong>Reason:</strong> ${reason}</p>
       <p>If you have any questions, please contact support.</p>
     </div>
   `

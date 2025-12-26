@@ -18,6 +18,8 @@ import Home from "./pages/Dashboard/Home";
 import Images from "./pages/UiElements/Images";
 import LineChart from "./pages/Charts/LineChart";
 import NotFound from "./pages/OtherPage/NotFound";
+import PromotionRequests from "./pages/Promotions/PromotionRequests";
+import PromotionTypes from "./pages/Promotions/PromotionTypes";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -41,6 +43,8 @@ export default function App() {
             <Route path="/guides" element={<Guides />} />
             <Route path="/all-guides" element={<AllGuides />} />
             <Route path="/tours" element={<Tours />} />
+            <Route path="/promotions/types" element={<PromotionTypes />} />
+            <Route path="/promotions/requests" element={<PromotionRequests />} />
             <Route path="/guide-profile-review" element={<GuideProfileReview />} />
             <Route path="/deletion-requests" element={<DeletionRequests />} />
             <Route path="/blank" element={<Blank />} />
