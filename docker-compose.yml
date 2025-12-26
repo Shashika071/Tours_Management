@@ -2,11 +2,12 @@ version: '3.8'
 
 services:
   backend:
-    build: .
+    build:
+      context: ./Tours_Backend
     ports:
       - "5000:5000"
     env_file:
-      - .env
+      - ./Tours_Backend/.env
     environment:
       - NODE_ENV=development
       - PORT=5000
@@ -27,9 +28,9 @@ services:
     depends_on:
       - mongodb
     volumes:
-      - .:/app
+      - ./Tours_Backend:/app
       - /app/node_modules
-      - ./public/uploads:/app/public/uploads
+      - ./Tours_Backend/public/uploads:/app/public/uploads
     command: npm run dev
     networks:
       - tours-network
@@ -45,9 +46,44 @@ services:
     networks:
       - tours-network
 
+  tours_frontend:
+    build:
+      context: ./Tours_Frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./Tours_Frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    networks:
+      - tours-network
+
+  guid_frontend:
+    build:
+      context: ./Guid_frontend
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./Guid_frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+    networks:
+      - tours-network
+
+  tours_manager:
+    build:
+      context: ./Tours_Manager
+    ports:
+      - "5175:5175"
+    volumes:
+      - ./Tours_Manager:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5175
+    networks:
+      - tours-network
+
 volumes:
   mongodb_data:
 
 networks:
   tours-network:
-    driver: bridge
