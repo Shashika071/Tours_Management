@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Modal } from "../../components/ui/modal";
 import PageMeta from "../../components/common/PageMeta";
 import { useNavigate } from "react-router";
+import { useTour } from "../../context/TourContext";
 
 interface Tour {
   _id: string;
@@ -26,9 +27,8 @@ interface Tour {
 
 const AllTours: React.FC = () => {
   const navigate = useNavigate();
-  const [tours, setTours] = useState<Tour[]>([]);
+  const { tours, loading, refetchTours } = useTour();
   const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedTour, setExpandedTour] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -39,32 +39,6 @@ const AllTours: React.FC = () => {
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [activeFilter, setActiveFilter] = useState<string>('all');
-
-  const fetchTours = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('guideToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/guide/tours/my-tours`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch tours');
-      }
-
-      const data = await response.json();
-      setTours(data.tours);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTours();
-  }, [fetchTours]);
 
   // Apply filters whenever tours or filter states change
   useEffect(() => {
@@ -145,7 +119,7 @@ const AllTours: React.FC = () => {
   const handleDelete = async (tourId: string) => {
     const tour = tours.find(t => t._id === tourId);
     let confirmMessage = 'Are you sure you want to delete this tour?';
-    
+
     if (tour?.status === 'approved') {
       confirmMessage = 'This tour is approved. Deleting it will require manager approval. Are you sure you want to continue?';
     }
@@ -163,17 +137,10 @@ const AllTours: React.FC = () => {
         const data = await response.json();
 
         if (response.ok) {
+          await refetchTours();
           if (data.status === 'pending_deletion') {
-            // Update tour status to pending_deletion instead of removing it
-            const updatedTours = tours.map(t => 
-              t._id === tourId ? { ...t, status: 'pending_deletion' as const } : t
-            );
-            setTours(updatedTours);
             alert('Deletion request submitted. Waiting for manager approval.');
           } else {
-            // For non-approved tours, remove from list
-            setTours(tours.filter(t => t._id !== tourId));
-            setFilteredTours(filteredTours.filter(t => t._id !== tourId));
             alert('Tour deleted successfully');
           }
         } else {
@@ -197,9 +164,7 @@ const AllTours: React.FC = () => {
       });
 
       if (response.ok) {
-        // Update the tour status to pending
-        setTours(tours.map(t => t._id === tourId ? { ...t, status: 'pending' as const, rejectionReason: undefined } : t));
-        setFilteredTours(filteredTours.map(t => t._id === tourId ? { ...t, status: 'pending' as const, rejectionReason: undefined } : t));
+        await refetchTours();
         alert('Tour resubmitted successfully');
       } else {
         alert('Failed to resubmit tour');
@@ -564,19 +529,17 @@ const AllTours: React.FC = () => {
                 <div className="space-y-2">
                   <div>
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedTourForDetails.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedTourForDetails.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
                       selectedTourForDetails.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
-                      'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                    }`}>
+                        'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
+                      }`}>
                       {selectedTourForDetails.status.charAt(0).toUpperCase() + selectedTourForDetails.status.slice(1)}
                     </span>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedTourForDetails.isActive ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-                    }`}>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedTourForDetails.isActive ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                      }`}>
                       {selectedTourForDetails.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>

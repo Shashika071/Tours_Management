@@ -1,5 +1,6 @@
 import * as authController from '../../controllers/GuidController/authController.js';
 
+import * as deletionController from '../../controllers/GuidController/deletionController.js';
 import auth from '../../middleware/auth.js';
 import { body } from 'express-validator';
 import express from 'express';
@@ -47,5 +48,9 @@ router.put('/profile', auth, upload.single('profileImage'), authController.updat
 router.post('/forgot-password', forgotPasswordValidation, authController.forgotPassword);
 router.post('/reset-password', resetPasswordValidation, authController.resetPassword);
 router.get('/verify-reset-token/:token', authController.verifyResetToken);
+
+// Account deletion
+router.post('/profile/delete-request', auth, deletionController.requestDeletion);
+router.post('/profile/cancel-delete', auth, deletionController.cancelDeletionRequest);
 
 export default router;

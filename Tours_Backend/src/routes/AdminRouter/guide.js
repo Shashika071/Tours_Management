@@ -17,4 +17,9 @@ router.get('/profile-review', guideController.getGuidesForProfileReview);
 router.put('/:guideId/approve-profile', guideController.approveGuideProfile);
 router.put('/:guideId/reject-profile', guideController.rejectGuideProfile);
 
+// Deletion Request Management
+router.get('/deletion-requests', guideController.getDeletionRequests);
+router.delete('/:guideId/confirm-deletion', guideController.confirmDeletion);
+router.put('/:guideId/reject-deletion', guideController.rejectDeletionRequest);
+
 export default router;

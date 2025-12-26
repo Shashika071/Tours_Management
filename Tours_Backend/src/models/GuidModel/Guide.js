@@ -137,6 +137,19 @@ const GuideSchema = new Schema(
       type: Date,
       default: null,
     },
+    // Deletion Request
+    deletionRequested: {
+      type: Boolean,
+      default: false,
+    },
+    deletionReason: {
+      type: String,
+      default: null,
+    },
+    deletionRequestDate: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

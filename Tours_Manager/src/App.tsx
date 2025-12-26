@@ -1,6 +1,7 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router";
 
 import Alerts from "./pages/UiElements/Alerts";
+import AllGuides from "./pages/AllGuides";
 import AppLayout from "./layout/AppLayout";
 import Avatars from "./pages/UiElements/Avatars";
 import Badges from "./pages/UiElements/Badges";
@@ -9,6 +10,7 @@ import BasicTables from "./pages/Tables/BasicTables";
 import Blank from "./pages/Blank";
 import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
+import DeletionRequests from "./pages/DeletionRequests";
 import FormElements from "./pages/Forms/FormElements";
 import GuideProfileReview from "./pages/GuideProfileReview";
 import Guides from "./pages/Guides";
@@ -37,8 +39,10 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/guides" element={<Guides />} />
+            <Route path="/all-guides" element={<AllGuides />} />
             <Route path="/tours" element={<Tours />} />
             <Route path="/guide-profile-review" element={<GuideProfileReview />} />
+            <Route path="/deletion-requests" element={<DeletionRequests />} />
             <Route path="/blank" element={<Blank />} />
 
             {/* Forms */}

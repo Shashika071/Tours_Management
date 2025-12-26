@@ -27,6 +27,9 @@ interface Guide {
   profileApproved: boolean;
   profileRejectionReason?: string;
   status: string;
+  deletionRequested?: boolean;
+  deletionReason?: string;
+  deletionRequestDate?: string;
 }
 
 interface ProfileContextType {
@@ -88,6 +91,13 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
 
   useEffect(() => {
     fetchProfile();
+
+    // Set up polling for real-time updates (every 60 seconds)
+    const pollInterval = setInterval(() => {
+      fetchProfile();
+    }, 60000);
+
+    return () => clearInterval(pollInterval);
   }, [fetchProfile]);
 
   const value = useMemo(() => ({

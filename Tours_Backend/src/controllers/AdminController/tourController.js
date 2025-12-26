@@ -1,6 +1,7 @@
 import Tour from '../../models/GuidModel/Tour.js';
 import nodemailer from 'nodemailer';
 import { sendEmail } from '../../utils/emailserver.js';
+import eventEmitter, { EVENTS } from '../../utils/events.js';
 
 export const getPendingTours = async (req, res) => {
   try {
@@ -93,6 +94,12 @@ export const approveTour = async (req, res) => {
       // Don't fail the request if email fails
     }
 
+    eventEmitter.emit(EVENTS.TOUR_STATUS_UPDATED, {
+      tourId: tour._id,
+      status: tour.status,
+      guideId: tour.guide._id
+    });
+
     res.json({ message: 'Tour approved successfully', tour });
   } catch (error) {
     console.error(error);
@@ -145,6 +152,13 @@ export const rejectTour = async (req, res) => {
       console.error('Failed to send rejection email:', emailError);
       // Don't fail the request if email fails
     }
+
+    eventEmitter.emit(EVENTS.TOUR_STATUS_UPDATED, {
+      tourId: tour._id,
+      status: tour.status,
+      guideId: tour.guide._id,
+      reason: rejectionReason
+    });
 
     res.json({ message: 'Tour rejected successfully', tour });
   } catch (error) {
@@ -243,6 +257,12 @@ export const approveDeletion = async (req, res) => {
       // Don't fail the request if email fails
     }
 
+    eventEmitter.emit(EVENTS.TOUR_STATUS_UPDATED, {
+      tourId: tour._id,
+      status: 'deleted',
+      guideId: tour.guide._id
+    });
+
     res.json({ message: 'Tour deletion approved and completed successfully' });
   } catch (error) {
     console.error(error);
@@ -295,6 +315,12 @@ export const rejectDeletion = async (req, res) => {
       console.error('Failed to send deletion rejection email:', emailError);
       // Don't fail the request if email fails
     }
+
+    eventEmitter.emit(EVENTS.TOUR_STATUS_UPDATED, {
+      tourId: tour._id,
+      status: 'approved',
+      guideId: tour.guide._id
+    });
 
     res.json({
       message: 'Tour deletion request rejected successfully',

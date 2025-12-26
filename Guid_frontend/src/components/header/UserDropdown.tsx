@@ -2,6 +2,7 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useProfile } from "../../context/ProfileContext";
 import { useState } from "react";
+import Avatar from "../common/Avatar";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,22 +18,24 @@ export default function UserDropdown() {
 
   const displayName = guide?.name || 'Guest User';
   const displayEmail = guide?.email || '';
-  const displayImage = guide?.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}` : '/images/user/owner.jpg';
+  const displayImage = guide?.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}?t=${new Date().getTime()}` : undefined;
   return (
     <div className="relative">
       <button
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src={displayImage} alt={displayName} />
-        </span>
+        <Avatar
+          src={displayImage}
+          name={displayName}
+          size="sm"
+          className="mr-3"
+        />
 
         <span className="block mr-1 font-medium text-theme-sm">{displayName}</span>
         <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+            }`}
           width="18"
           height="20"
           viewBox="0 0 18 20"
@@ -89,7 +92,7 @@ export default function UserDropdown() {
               Edit profile
             </DropdownItem>
           </li>
-       
+
           <li>
             <DropdownItem
               onItemClick={closeDropdown}

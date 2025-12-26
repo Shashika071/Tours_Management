@@ -1,6 +1,7 @@
 import Guide from '../../models/GuidModel/Guide.js';
-import nodemailer from 'nodemailer';
 import { sendEmail } from '../../utils/emailserver.js';
+import { deletionApprovedTemplate, deletionRejectedTemplate } from '../../utils/emailTemplates.js';
+import eventEmitter, { EVENTS } from '../../utils/events.js';
 
 export const getPendingGuides = async (req, res) => {
   try {
@@ -41,6 +42,11 @@ export const approveGuide = async (req, res) => {
       // Continue with approval even if email fails
     }
 
+    eventEmitter.emit(EVENTS.GUIDE_STATUS_UPDATED, {
+      guideId: guide._id,
+      status: guide.status
+    });
+
     res.json({ message: 'Guide approved successfully', guide });
   } catch (error) {
     console.error(error);
@@ -79,6 +85,12 @@ export const rejectGuide = async (req, res) => {
     };
 
     await sendEmail(mailOptions);
+
+    eventEmitter.emit(EVENTS.GUIDE_STATUS_UPDATED, {
+      guideId: guide._id,
+      status: guide.status,
+      reason
+    });
 
     res.json({ message: 'Guide rejected successfully', guide });
   } catch (error) {
@@ -132,6 +144,11 @@ export const approveGuideProfile = async (req, res) => {
       console.error('Failed to send profile approval email:', emailError);
     }
 
+    eventEmitter.emit(EVENTS.GUIDE_STATUS_UPDATED, {
+      guideId: guide._id,
+      profileApproved: true
+    });
+
     res.json({ message: 'Guide profile approved successfully', guide });
 
   } catch (error) {
@@ -180,7 +197,95 @@ export const rejectGuideProfile = async (req, res) => {
       console.error('Failed to send profile rejection email:', emailError);
     }
 
+    eventEmitter.emit(EVENTS.GUIDE_STATUS_UPDATED, {
+      guideId: guide._id,
+      profileApproved: false,
+      reason
+    });
+
     res.json({ message: 'Guide profile rejected successfully', guide });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getDeletionRequests = async (req, res) => {
+  try {
+    const requests = await Guide.find({ deletionRequested: true }).select('-password');
+    res.json({ guides: requests });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const confirmDeletion = async (req, res) => {
+  try {
+    const { guideId } = req.params;
+    const guide = await Guide.findById(guideId);
+
+    if (!guide) {
+      return res.status(404).json({ message: 'Guide not found' });
+    }
+
+    // Send confirmation email before deleting
+    try {
+      const emailContent = deletionApprovedTemplate(guide.name);
+      await sendEmail({
+        to: guide.email,
+        ...emailContent
+      });
+    } catch (emailError) {
+      console.error('Failed to send deletion approval email to guide:', emailError);
+    }
+
+    // Option 1: Hard delete
+    await Guide.findByIdAndDelete(guideId);
+
+    // Option 2: Soft delete (if you want to keep data)
+    // guide.status = 'deleted';
+    // guide.active = false;
+    // await guide.save();
+
+    res.json({ message: 'Guide account deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const rejectDeletionRequest = async (req, res) => {
+  try {
+    const { guideId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+
+    const guide = await Guide.findById(guideId);
+    if (!guide) {
+      return res.status(404).json({ message: 'Guide not found' });
+    }
+
+    guide.deletionRequested = false;
+    guide.deletionReason = null;
+    guide.deletionRequestDate = null;
+    await guide.save();
+
+    // Send rejection email
+    try {
+      const emailContent = deletionRejectedTemplate(guide.name, reason);
+      await sendEmail({
+        to: guide.email,
+        ...emailContent
+      });
+    } catch (emailError) {
+      console.error('Failed to send deletion rejection email to guide:', emailError);
+    }
+
+    res.json({ message: 'Deletion request rejected', guide });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

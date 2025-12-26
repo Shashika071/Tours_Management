@@ -180,6 +180,13 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
 
   useEffect(() => {
     fetchTours();
+
+    // Set up polling for real-time updates (every 30 seconds)
+    const pollInterval = setInterval(() => {
+      fetchTours();
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
   }, [fetchTours]);
 
   const value = useMemo(() => ({

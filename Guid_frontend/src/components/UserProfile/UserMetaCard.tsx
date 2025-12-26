@@ -6,6 +6,7 @@ import Label from "../form/Label";
 import { Modal } from "../ui/modal";
 import { useModal } from "../../hooks/useModal";
 import { useProfile } from "../../context/ProfileContext";
+import Avatar from "../common/Avatar";
 
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -26,7 +27,7 @@ export default function UserMetaCard() {
         phone: guide.phone || '',
         address: guide.address || ''
       });
-      setPreviewImage(guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}` : '');
+      setPreviewImage(guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}?t=${new Date().getTime()}` : '');
     }
   }, [guide]);
 
@@ -98,18 +99,11 @@ export default function UserMetaCard() {
       <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-            <div className="relative w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-              <img
-                src={previewImage || (guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}` : "/images/user/user-01.jpg")}
-                alt="user"
-                className="object-cover w-full h-full"
-              />
-              {selectedFile && (
-                <div className="absolute inset-0 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-green-700 font-medium">New</span>
-                </div>
-              )}
-            </div>
+            <Avatar
+              src={previewImage || (guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}?t=${new Date().getTime()}` : undefined)}
+              name={guide.name}
+              size="xl"
+            />
             <div className="order-3 xl:order-2">
               <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
                 {guide.name || 'Guide'}
@@ -165,20 +159,12 @@ export default function UserMetaCard() {
                   Profile Picture
                 </h5>
                 <div className="flex items-center gap-6">
-                  <div className="relative w-24 h-24 overflow-hidden border-2 border-gray-200 rounded-full dark:border-gray-800">
-                    <img
-                      src={previewImage || (guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}` : "/images/user/user-01.jpg")}
-                      alt="Profile preview"
-                      className="object-cover w-full h-full"
-                    />
-                    {selectedFile && (
-                      <div className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+                  <Avatar
+                    src={previewImage || (guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}` : undefined)}
+                    name={guide.name}
+                    size="2xl"
+                    className="border-2"
+                  />
                   <div>
                     <input
                       type="file"
