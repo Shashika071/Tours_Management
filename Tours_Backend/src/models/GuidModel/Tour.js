@@ -53,7 +53,7 @@ const TourSchema = new Schema(
     },
     category: {
       type: String,
-      enum: ['Adventure', 'Cultural', 'Nature', 'City', 'Beach', 'Mountain', 'Historical', 'Food', 'Other'],
+      required: true,
       default: 'Other',
     },
     images: [{

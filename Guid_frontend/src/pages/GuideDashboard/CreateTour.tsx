@@ -33,6 +33,23 @@ const CreateTour: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
 
+  const initialCategories = [
+    { value: 'Adventure', label: 'Adventure' },
+    { value: 'Cultural', label: 'Cultural' },
+    { value: 'Nature', label: 'Nature' },
+    { value: 'City', label: 'City' },
+    { value: 'Beach', label: 'Beach' },
+    { value: 'Mountain', label: 'Mountain' },
+    { value: 'Historical', label: 'Historical' },
+    { value: 'Food', label: 'Food' },
+    { value: 'Other', label: 'Other' },
+  ];
+
+  const [categories, setCategories] = useState(initialCategories);
+  const [newCategory, setNewCategory] = useState('');
+  const [showAddNew, setShowAddNew] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
   const [formData, setFormData] = useState<TourFormData>({
     title: '',
     description: '',
@@ -57,6 +74,10 @@ const CreateTour: React.FC = () => {
   };
 
   const handleSelectChange = (name: string) => (value: string) => {
+    if (name === 'category' && value === 'add-new') {
+      setShowAddNew(true);
+      return;
+    }
     setFormData(prev => ({
       ...prev,
       [name]: value,
@@ -70,6 +91,16 @@ const CreateTour: React.FC = () => {
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addNewCategory = () => {
+    if (newCategory.trim() && !categories.some(cat => cat.value === newCategory.trim())) {
+      const newCat = { value: newCategory.trim(), label: newCategory.trim() };
+      setCategories(prev => [...prev, newCat]);
+      setFormData(prev => ({ ...prev, category: newCategory.trim() }));
+      setNewCategory('');
+      setShowAddNew(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,8 +152,12 @@ const CreateTour: React.FC = () => {
       console.log('Create tour result:', result);
 
       if (result.success) {
-        alert(result.message);
-        navigate('/tours/manage');
+        console.log('Tour creation successful, showing message and navigating...');
+        setSuccessMessage('Waiting for manager approval');
+        setTimeout(() => {
+          console.log('Navigating to /tours/manage');
+          navigate('/tours/manage', { replace: true });
+        }, 2000); // 2 seconds delay
       } else {
         alert(`Tour creation failed: ${result.message}`);
       }
@@ -142,15 +177,8 @@ const CreateTour: React.FC = () => {
   ];
 
   const categoryOptions = [
-    { value: 'Adventure', label: 'Adventure' },
-    { value: 'Cultural', label: 'Cultural' },
-    { value: 'Nature', label: 'Nature' },
-    { value: 'City', label: 'City' },
-    { value: 'Beach', label: 'Beach' },
-    { value: 'Mountain', label: 'Mountain' },
-    { value: 'Historical', label: 'Historical' },
-    { value: 'Food', label: 'Food' },
-    { value: 'Other', label: 'Other' },
+    ...categories,
+    { value: 'add-new', label: '+ Add New Category' },
   ];
 
   return (
@@ -162,6 +190,11 @@ const CreateTour: React.FC = () => {
       <PageBreadcrumb pageTitle="Create Tour" />
 
       <div className="grid grid-cols-1 gap-6">
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            {successMessage}
+          </div>
+        )}
         <ComponentCard title="Tour Information">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -253,6 +286,32 @@ const CreateTour: React.FC = () => {
                   defaultValue={formData.category}
                   className="w-full"
                 />
+                {showAddNew && (
+                  <div className="mt-2 flex gap-2">
+                    <InputField
+                      type="text"
+                      placeholder="Enter new category"
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addNewCategory}
+                      className="px-4 py-2"
+                    >
+                      Add
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAddNew(false)}
+                      className="px-4 py-2"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -348,7 +407,7 @@ const CreateTour: React.FC = () => {
 
             <div className="flex gap-4">
               <Button
-                onClick={() => document.querySelector('form')?.requestSubmit()}
+                type="submit"
                 disabled={loading}
                 className="px-6 py-3"
               >
