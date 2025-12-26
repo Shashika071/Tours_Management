@@ -32,6 +32,8 @@ const GuideProfileReview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
     fetchGuidesForReview();
@@ -80,6 +82,47 @@ const GuideProfileReview: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a rejection reason');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/guides/${selectedGuide!._id}/reject-profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason: rejectionReason }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reject guide profile');
+      }
+
+      // Remove from list
+      setGuides(guides.filter(g => g._id !== selectedGuide!._id));
+      setSelectedGuide(null);
+      setShowRejectModal(false);
+      setRejectionReason('');
+      alert('Guide profile rejected successfully!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const openRejectModal = () => {
+    setShowRejectModal(true);
+  };
+
+  const closeRejectModal = () => {
+    setShowRejectModal(false);
+    setRejectionReason('');
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -146,6 +189,12 @@ const GuideProfileReview: React.FC = () => {
               Approve Profile
             </button>
             <button
+              onClick={openRejectModal}
+              className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Reject Profile
+            </button>
+            <button
               onClick={() => setSelectedGuide(null)}
               className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
@@ -178,6 +227,37 @@ const GuideProfileReview: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-99999">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Reject Guide Profile</h3>
+            <p className="mb-4">Please provide a reason for rejecting {selectedGuide?.name}'s profile:</p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded mb-4"
+              rows={4}
+              placeholder="Enter rejection reason..."
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeRejectModal}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Reject
+              </button>
+            </div>
           </div>
         </div>
       )}

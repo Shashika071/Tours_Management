@@ -11,6 +11,7 @@ import Blank from "./pages/Blank";
 import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
 import CreateTour from "./pages/GuideDashboard/CreateTour";
+import EditTour from "./pages/GuideDashboard/EditTour";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import FormElements from "./pages/Forms/FormElements";
 import GeneralSettings from "./pages/Settings/GeneralSettings";
@@ -39,6 +40,7 @@ export default function App() {
 
             {/* Tours Management */}
             <Route path="/tours/add" element={<CreateTour />} />
+            <Route path="/tours/edit/:tourId" element={<EditTour />} />
             <Route path="/tours/manage" element={<AllTours />} />
             <Route path="/tours/categories" element={<PlaceholderPage title="Tour Categories" description="Organize tours by categories and types." />} />
             <Route path="/tours/locations" element={<PlaceholderPage title="Tour Locations" description="Manage tour destinations and locations." />} />

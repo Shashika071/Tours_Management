@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Modal } from "../../components/ui/modal";
 import PageMeta from "../../components/common/PageMeta";
 import { useNavigate } from "react-router";
 
@@ -30,6 +31,8 @@ const AllTours: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedTour, setExpandedTour] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -117,6 +120,79 @@ const AllTours: React.FC = () => {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleEdit = (tourId: string) => {
+    const tour = tours.find(t => t._id === tourId);
+    if (tour?.status === 'approved') {
+      // For approved tours, allow editing but notify manager
+      const confirmEdit = window.confirm(
+        'This tour is approved. Editing it will notify the manager for review. Continue?'
+      );
+      if (!confirmEdit) return;
+    }
+    navigate(`/tours/edit/${tourId}`);
+  };
+
+  const handleViewDetails = (tour: Tour) => {
+    setSelectedTourForDetails(tour);
+    setDetailsModalOpen(true);
+  };
+
+  const handleDelete = async (tourId: string) => {
+    const tour = tours.find(t => t._id === tourId);
+    let confirmMessage = 'Are you sure you want to delete this tour?';
+    
+    if (tour?.status === 'approved') {
+      confirmMessage = 'This tour is approved. Deleting it will notify the manager for review. Are you sure you want to continue?';
+    }
+
+    if (window.confirm(confirmMessage)) {
+      try {
+        const token = localStorage.getItem('guideToken');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/guide/tours/${tourId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setTours(tours.filter(t => t._id !== tourId));
+          setFilteredTours(filteredTours.filter(t => t._id !== tourId));
+          alert('Tour deleted successfully');
+        } else {
+          alert('Failed to delete tour');
+        }
+      } catch (error) {
+        console.error('Error deleting tour:', error);
+        alert('Error deleting tour');
+      }
+    }
+  };
+
+  const handleResubmit = async (tourId: string) => {
+    try {
+      const token = localStorage.getItem('guideToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/guide/tours/${tourId}/resubmit`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        // Update the tour status to pending
+        setTours(tours.map(t => t._id === tourId ? { ...t, status: 'pending' as const, rejectionReason: undefined } : t));
+        setFilteredTours(filteredTours.map(t => t._id === tourId ? { ...t, status: 'pending' as const, rejectionReason: undefined } : t));
+        alert('Tour resubmitted successfully');
+      } else {
+        alert('Failed to resubmit tour');
+      }
+    } catch (error) {
+      console.error('Error resubmitting tour:', error);
+      alert('Error resubmitting tour');
     }
   };
 
@@ -297,20 +373,11 @@ const AllTours: React.FC = () => {
               <div key={tour._id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-4">
-                      {tour.images && tour.images.length > 0 && (
-                        <img
-                          src={`${import.meta.env.VITE_API_URL}${tour.images[0]}`}
-                          alt={tour.title}
-                          className="w-20 h-20 rounded-lg object-cover"
-                        />
-                      )}
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{tour.title}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Created: {new Date(tour.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                    <div className="mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{tour.title}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Created: {new Date(tour.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
@@ -360,86 +427,40 @@ const AllTours: React.FC = () => {
                       </div>
                     )}
 
-                    {tour.images && tour.images.length > 1 && (
-                      <div className="mb-4">
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Images ({tour.images.length}):</span>
-                        <div className="flex space-x-2 mt-2">
-                          {tour.images.slice(1, 4).map((image, index) => (
-                            <img
-                              key={`${tour._id}-${image}`}
-                              src={`${import.meta.env.VITE_API_URL}${image}`}
-                              alt={`${tour.title} ${index + 2}`}
-                              className="w-16 h-16 rounded object-cover"
-                            />
-                          ))}
-                          {tour.images.length > 4 && (
-                            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
-                              +{tour.images.length - 4}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Expandable Details */}
-                    {expandedTour === tour._id && (
-                      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border">
-                        <h4 className="font-semibold mb-3 text-gray-900 dark:text-white">Tour Details</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tour ID:</span>
-                            <p className="text-sm font-mono break-all text-gray-900 dark:text-white">{tour._id}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Max Participants:</span>
-                            <p className="text-sm text-gray-900 dark:text-white">{tour.maxParticipants || 'Not specified'}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Status:</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              tour.isActive ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-                            }`}>
-                              {tour.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Images:</span>
-                            <p className="text-sm text-gray-900 dark:text-white">{tour.images ? tour.images.length : 0}</p>
-                          </div>
-                        </div>
-
-                        {/* Additional Details Sections */}
-                        {tour.itinerary && (
-                          <div className="mb-4">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Itinerary:</span>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-line">{tour.itinerary}</p>
-                          </div>
-                        )}
-
-                        {tour.inclusions && (
-                          <div className="mb-4">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Inclusions:</span>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-line">{tour.inclusions}</p>
-                          </div>
-                        )}
-
-                        {tour.exclusions && (
-                          <div className="mb-4">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Exclusions:</span>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-line">{tour.exclusions}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* View Details Button */}
-                    <div className="mt-4">
+                    {/* Action Buttons */}
+                    <div className="mt-4 flex flex-wrap gap-2">
                       <button
-                        onClick={() => setExpandedTour(expandedTour === tour._id ? null : tour._id)}
+                        onClick={() => handleViewDetails(tour)}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium underline"
                       >
-                        {expandedTour === tour._id ? 'Hide Details' : 'View Details'}
+                        View Details
                       </button>
+
+                      {/* Edit Button - available for all statuses, but may require permission for approved */}
+                      <button
+                        onClick={() => handleEdit(tour._id)}
+                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-medium underline"
+                      >
+                        Edit
+                      </button>
+
+                      {/* Delete Button - available for all statuses, but may require permission for approved */}
+                      <button
+                        onClick={() => handleDelete(tour._id)}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium underline"
+                      >
+                        Delete
+                      </button>
+
+                      {/* Resubmit Button - only for rejected tours */}
+                      {tour.status === 'rejected' && (
+                        <button
+                          onClick={() => handleResubmit(tour._id)}
+                          className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium underline"
+                        >
+                          Resubmit
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -448,6 +469,151 @@ const AllTours: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Tour Details Modal */}
+      <Modal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        className="max-w-4xl max-h-[90vh] overflow-y-auto"
+      >
+        {selectedTourForDetails && (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+              {selectedTourForDetails.title}
+            </h2>
+
+            {/* Tour Images */}
+            {selectedTourForDetails.images && selectedTourForDetails.images.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Images</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {selectedTourForDetails.images.slice(0, 6).map((image, index) => (
+                    <img
+                      key={index}
+                      src={`${import.meta.env.VITE_API_URL}${image}`}
+                      alt={`Tour image ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                  ))}
+                  {selectedTourForDetails.images.length > 6 && (
+                    <div className="w-full h-32 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
+                      +{selectedTourForDetails.images.length - 6} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Basic Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tour ID:</span>
+                    <p className="text-sm font-mono break-all text-gray-900 dark:text-white">{selectedTourForDetails._id}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Location:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.location}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Price:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">${selectedTourForDetails.price}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Duration:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.duration}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.difficulty}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Category:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.category}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Status & Details</h3>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedTourForDetails.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
+                      selectedTourForDetails.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
+                      'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
+                    }`}>
+                      {selectedTourForDetails.status.charAt(0).toUpperCase() + selectedTourForDetails.status.slice(1)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Status:</span>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedTourForDetails.isActive ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                    }`}>
+                      {selectedTourForDetails.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Max Participants:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.maxParticipants || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Images:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.images ? selectedTourForDetails.images.length : 0}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Created:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{new Date(selectedTourForDetails.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Description</h3>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.description}</p>
+            </div>
+
+            {/* Additional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {selectedTourForDetails.itinerary && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Itinerary</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.itinerary}</p>
+                </div>
+              )}
+
+              {selectedTourForDetails.inclusions && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Inclusions</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.inclusions}</p>
+                </div>
+              )}
+
+              {selectedTourForDetails.exclusions && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Exclusions</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.exclusions}</p>
+                </div>
+              )}
+
+              {selectedTourForDetails.rejectionReason && (
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">Rejection Reason</h3>
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-sm text-red-800 dark:text-red-300">{selectedTourForDetails.rejectionReason}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </>
   );
 };

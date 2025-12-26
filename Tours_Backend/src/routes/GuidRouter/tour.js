@@ -2,6 +2,7 @@ import {
   createTour,
   deleteTour,
   getMyTours,
+  resubmitTour,
   updateTour,
 } from '../../controllers/GuidController/tourController.js';
 
@@ -25,5 +26,8 @@ router.put('/:tourId', upload.fields([{ name: 'images', maxCount: 10 }]), update
 
 // Delete a tour
 router.delete('/:tourId', deleteTour);
+
+// Resubmit a rejected tour
+router.put('/:tourId/resubmit', resubmitTour);
 
 export default router;

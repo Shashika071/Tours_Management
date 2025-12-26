@@ -1,4 +1,5 @@
 import Tour from '../../models/GuidModel/Tour.js';
+import { sendEmail } from '../../utils/emailserver.js';
 
 export const createTour = async (req, res) => {
   try {
@@ -68,6 +69,35 @@ export const createTour = async (req, res) => {
     await tour.save();
     console.log('Tour saved successfully with ID:', tour._id);
 
+    // Send notification email to admin
+    try {
+      const mailOptions = {
+        to: process.env.EMAIL_USER,
+        subject: 'New Tour Submitted for Approval',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #007bff;">New Tour Submission</h2>
+            <p>A new tour has been submitted and is waiting for your approval.</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #495057;">Tour Details:</h3>
+              <p><strong>Title:</strong> ${tour.title}</p>
+              <p><strong>Location:</strong> ${tour.location}</p>
+              <p><strong>Price:</strong> $${tour.price}</p>
+              <p><strong>Duration:</strong> ${tour.duration}</p>
+              <p><strong>Guide:</strong> ${req.user.name || 'Guide'}</p>
+            </div>
+            <p>Please review and approve or reject the tour at: <a href="${process.env.ADMIN_FRONTEND_URL}/tours">${process.env.ADMIN_FRONTEND_URL}/tours</a></p>
+            <p>Best regards,<br>Tours Management System</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send notification email:', emailError);
+      // Don't fail the request if email fails
+    }
+
     res.status(201).json({
       message: 'Tour created successfully. Waiting for admin approval.',
       tour,
@@ -106,6 +136,36 @@ export const updateTour = async (req, res) => {
 
     const updatedTour = await Tour.findByIdAndUpdate(tourId, updateData, { new: true });
     if (!updatedTour) return res.status(404).json({ message: 'Tour not found' });
+
+    // Send notification email to admin if this was an approved tour
+    if (tour.status === 'approved') {
+      try {
+        const mailOptions = {
+          to: process.env.EMAIL_USER,
+          subject: 'Approved Tour Modified - Requires Review',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ffc107;">Approved Tour Modified</h2>
+              <p>An approved tour has been modified by its guide and requires your review.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #495057;">Tour Details:</h3>
+                <p><strong>Title:</strong> ${updatedTour.title}</p>
+                <p><strong>Location:</strong> ${updatedTour.location}</p>
+                <p><strong>Guide:</strong> ${req.user.name || 'Guide'}</p>
+                <p><strong>Modified At:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+              <p>Please review the changes at: <a href="${process.env.ADMIN_FRONTEND_URL}/tours">${process.env.ADMIN_FRONTEND_URL}/tours</a></p>
+              <p>Best regards,<br>Tours Management System</p>
+            </div>
+          `,
+        };
+
+        await sendEmail(mailOptions);
+      } catch (emailError) {
+        console.error('Failed to send modification notification email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     res.json({
       message: 'Tour updated successfully. Waiting for admin approval.',
@@ -206,7 +266,60 @@ export const deleteTour = async (req, res) => {
     const tour = await Tour.findOneAndDelete({ _id: tourId, guide: guideId });
     if (!tour) return res.status(404).json({ message: 'Tour not found' });
 
+    // Send notification email to admin if this was an approved tour
+    if (tour.status === 'approved') {
+      try {
+        const mailOptions = {
+          to: process.env.EMAIL_USER,
+          subject: 'Approved Tour Deleted - Requires Attention',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Approved Tour Deleted</h2>
+              <p>An approved tour has been deleted by its guide.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #495057;">Deleted Tour Details:</h3>
+                <p><strong>Title:</strong> ${tour.title}</p>
+                <p><strong>Location:</strong> ${tour.location}</p>
+                <p><strong>Guide:</strong> ${req.user.name || 'Guide'}</p>
+                <p><strong>Deleted At:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+              <p>This action may require your attention. Please check if this deletion was authorized.</p>
+              <p>Best regards,<br>Tours Management System</p>
+            </div>
+          `,
+        };
+
+        await sendEmail(mailOptions);
+      } catch (emailError) {
+        console.error('Failed to send deletion notification email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
     res.json({ message: 'Tour deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const resubmitTour = async (req, res) => {
+  try {
+    const guideId = req.user.userId;
+    const { tourId } = req.params;
+
+    if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
+    if (!tourId || typeof tourId !== 'string') return res.status(400).json({ message: 'Invalid tour ID' });
+
+    const tour = await Tour.findOneAndUpdate(
+      { _id: tourId, guide: guideId, status: 'rejected' },
+      { status: 'pending', rejectionReason: null },
+      { new: true }
+    );
+
+    if (!tour) return res.status(404).json({ message: 'Tour not found or not in rejected status' });
+
+    res.json({ message: 'Tour resubmitted successfully', tour });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

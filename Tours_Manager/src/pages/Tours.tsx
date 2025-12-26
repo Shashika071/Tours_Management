@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Modal } from '../components/ui/modal';
+
 interface Tour {
   _id: string;
   title: string;
@@ -34,6 +36,8 @@ const Tours: React.FC = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const [expandedTour, setExpandedTour] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
   const [tourCounts, setTourCounts] = useState({
     pending: 0,
     approved: 0,
@@ -168,6 +172,11 @@ const Tours: React.FC = () => {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'An error occurred');
     }
+  };
+
+  const handleViewDetails = (tour: Tour) => {
+    setSelectedTourForDetails(tour);
+    setDetailsModalOpen(true);
   };
 
   const openRejectModal = (tourId: string) => {
@@ -413,21 +422,12 @@ const Tours: React.FC = () => {
             <div key={tour._id} className="bg-white p-6 rounded-lg shadow-md border">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-4">
-                    {tour.images && tour.images.length > 0 && (
-                      <img
-                        src={`${import.meta.env.VITE_API_URL}${tour.images[0]}`}
-                        alt={tour.title}
-                        className="w-20 h-20 rounded-lg object-cover"
-                      />
-                    )}
-                    <div>
-                      <h3 className="text-xl font-semibold">{tour.title}</h3>
-                      <p className="text-gray-600">Guide: {tour.guide.name} ({tour.guide.email})</p>
-                      <p className="text-sm text-gray-500">
-                        Created: {new Date(tour.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-semibold">{tour.title}</h3>
+                    <p className="text-gray-600">Guide: {tour.guide.name} ({tour.guide.email})</p>
+                    <p className="text-sm text-gray-500">
+                      Created: {new Date(tour.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
@@ -477,105 +477,13 @@ const Tours: React.FC = () => {
                     </div>
                   )}
 
-                  {tour.images && tour.images.length > 1 && (
-                    <div className="mb-4">
-                      <span className="text-sm font-medium text-gray-500">Images ({tour.images.length}):</span>
-                      <div className="flex space-x-2 mt-2">
-                        {tour.images.slice(1, 4).map((image, index) => (
-                          <img
-                            key={`${tour._id}-${image}`}
-                            src={`${import.meta.env.VITE_API_URL}${image}`}
-                            alt={`${tour.title} ${index + 2}`}
-                            className="w-16 h-16 rounded object-cover"
-                          />
-                        ))}
-                        {tour.images.length > 4 && (
-                          <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-sm text-gray-600">
-                            +{tour.images.length - 4}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Expandable Details */}
-                  {expandedTour === tour._id && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                      <h4 className="font-semibold mb-3">Tour Details</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Tour ID:</span>
-                          <p className="text-sm font-mono break-all">{tour._id}</p>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Guide ID:</span>
-                          <p className="text-sm font-mono break-all">{tour.guide._id}</p>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Difficulty:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(tour.difficulty)}`}>
-                            {tour.difficulty}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Category:</span>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {tour.category}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Max Participants:</span>
-                          <p className="text-sm">{tour.maxParticipants || 'Not specified'}</p>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Active Status:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            tour.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {tour.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Created Date:</span>
-                          <p className="text-sm">{new Date(tour.createdAt).toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">Total Images:</span>
-                          <p className="text-sm">{tour.images ? tour.images.length : 0}</p>
-                        </div>
-                      </div>
-
-                      {/* Additional Details Sections */}
-                      {tour.itinerary && (
-                        <div className="mb-4">
-                          <span className="text-sm font-medium text-gray-500">Itinerary:</span>
-                          <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{tour.itinerary}</p>
-                        </div>
-                      )}
-
-                      {tour.inclusions && (
-                        <div className="mb-4">
-                          <span className="text-sm font-medium text-gray-500">Inclusions:</span>
-                          <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{tour.inclusions}</p>
-                        </div>
-                      )}
-
-                      {tour.exclusions && (
-                        <div className="mb-4">
-                          <span className="text-sm font-medium text-gray-500">Exclusions:</span>
-                          <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{tour.exclusions}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* View Details Button */}
                   <div className="mt-4">
                     <button
-                      onClick={() => setExpandedTour(expandedTour === tour._id ? null : tour._id)}
+                      onClick={() => handleViewDetails(tour)}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
                     >
-                      {expandedTour === tour._id ? 'Hide Details' : 'View Details'}
+                      View Details
                     </button>
                   </div>
                 </div>
@@ -636,6 +544,179 @@ const Tours: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Tour Details Modal */}
+      <Modal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        className="max-w-4xl max-h-[90vh] overflow-y-auto"
+      >
+        {selectedTourForDetails && (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+              {selectedTourForDetails.title}
+            </h2>
+
+            {/* Tour Images */}
+            {selectedTourForDetails.images && selectedTourForDetails.images.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Images</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {selectedTourForDetails.images.slice(0, 6).map((image, index) => (
+                    <img
+                      key={index}
+                      src={`${import.meta.env.VITE_API_URL}${image}`}
+                      alt={`Tour image ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                  ))}
+                  {selectedTourForDetails.images.length > 6 && (
+                    <div className="w-full h-32 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
+                      +{selectedTourForDetails.images.length - 6} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Basic Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tour ID:</span>
+                    <p className="text-sm font-mono break-all text-gray-900 dark:text-white">{selectedTourForDetails._id}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Guide:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.guide.name} ({selectedTourForDetails.guide.email})</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Location:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.location}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Price:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">${selectedTourForDetails.price}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Duration:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.duration}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.difficulty}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Category:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.category}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Status & Details</h3>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedTourForDetails.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
+                      selectedTourForDetails.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
+                      'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
+                    }`}>
+                      {selectedTourForDetails.status.charAt(0).toUpperCase() + selectedTourForDetails.status.slice(1)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Status:</span>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedTourForDetails.isActive ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                    }`}>
+                      {selectedTourForDetails.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Max Participants:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.maxParticipants || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Images:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedTourForDetails.images ? selectedTourForDetails.images.length : 0}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Created:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">{new Date(selectedTourForDetails.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Description</h3>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.description}</p>
+            </div>
+
+            {/* Additional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {selectedTourForDetails.itinerary && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Itinerary</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.itinerary}</p>
+                </div>
+              )}
+
+              {selectedTourForDetails.inclusions && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Inclusions</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.inclusions}</p>
+                </div>
+              )}
+
+              {selectedTourForDetails.exclusions && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Exclusions</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{selectedTourForDetails.exclusions}</p>
+                </div>
+              )}
+
+              {selectedTourForDetails.rejectionReason && (
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">Rejection Reason</h3>
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-sm text-red-800 dark:text-red-300">{selectedTourForDetails.rejectionReason}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons for Pending Tours */}
+            {selectedTourForDetails.status === 'pending' && (
+              <div className="mt-6 flex gap-4">
+                <button
+                  onClick={() => {
+                    handleApprove(selectedTourForDetails._id);
+                    setDetailsModalOpen(false);
+                  }}
+                  className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+                >
+                  Approve Tour
+                </button>
+                <button
+                  onClick={() => {
+                    openRejectModal(selectedTourForDetails._id);
+                    setDetailsModalOpen(false);
+                  }}
+                  className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600"
+                >
+                  Reject Tour
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

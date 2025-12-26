@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_EMAIL = process.env.EMAIL_USER || 'admin@example.com';
 const ADMIN_PASSWORD = 'admin123';
 
 const generateToken = (userId) => {

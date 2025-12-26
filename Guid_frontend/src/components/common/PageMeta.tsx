@@ -1,4 +1,4 @@
-import { HelmetProvider, Helmet } from "react-helmet-async";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 
 const PageMeta = ({
   title,
@@ -8,13 +8,16 @@ const PageMeta = ({
   description: string;
 }) => (
   <Helmet>
-    <title>{title}</title>
+    <title>GuideBeeLK - Guider</title>
     <meta name="description" content={description} />
   </Helmet>
 );
 
 export const AppWrapper = ({ children }: { children: React.ReactNode }) => (
-  <HelmetProvider>{children}</HelmetProvider>
+  <HelmetProvider>
+    <Helmet defaultTitle="GuideBeeLK - Guider" />
+    {children}
+  </HelmetProvider>
 );
 
 export default PageMeta;
