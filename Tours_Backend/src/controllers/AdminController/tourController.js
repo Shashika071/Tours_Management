@@ -259,17 +259,16 @@ export const rejectDeletion = async (req, res) => {
       return res.status(400).json({ message: 'Rejection reason is required' });
     }
 
-    const tour = await Tour.findByIdAndUpdate(
-      tourId,
-      { status: 'approved' }, // Revert back to approved status
-      { new: true }
-    ).populate('guide', 'name email');
+    const tour = await Tour.findById(tourId).populate('guide', 'name email');
 
     if (!tour) return res.status(404).json({ message: 'Tour not found' });
 
     if (tour.status !== 'pending_deletion') {
       return res.status(400).json({ message: 'Tour is not pending deletion' });
     }
+
+    // Update tour status back to approved
+    await Tour.findByIdAndUpdate(tourId, { status: 'approved' });
 
     // Send rejection email to guide
     try {
