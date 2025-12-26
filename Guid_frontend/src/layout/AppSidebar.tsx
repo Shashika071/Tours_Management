@@ -18,9 +18,8 @@ import {
 import { Link, useLocation } from "react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useSidebar } from "../context/SidebarContext";
 import { useProfile } from "../context/ProfileContext";
-
+import { useSidebar } from "../context/SidebarContext";
 
 type NavItem = {
   name: string;
@@ -44,8 +43,6 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Add Tour", path: "/tours/add", pro: false },
       { name: "All Tours", path: "/tours/manage", pro: false },
-      { name: "Categories", path: "/tours/categories", pro: false },
-      { name: "Tour Locations", path: "/tours/locations", pro: false },
       { name: "Tour Calendar", path: "/tours/calendar", pro: false },
     ],
   },
@@ -365,29 +362,18 @@ const AppSidebar: React.FC = () => {
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
+            <div className="flex items-center gap-2">
               <img
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo2.png"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={64}
+                height={64}
+                className="rounded"
               />
-              <img
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+              <span className="text-2xl font-bold text-brand-500">GuideBeeLK</span>
+            </div>
           ) : (
-            <img
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <span className="text-xl font-bold text-brand-500">GB</span>
           )}
         </Link>
       </div>

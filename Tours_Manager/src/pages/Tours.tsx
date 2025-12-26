@@ -16,7 +16,7 @@ interface Tour {
   difficulty: string;
   category: string;
   images: string[];
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'pending_deletion';
   guide: {
     _id: string;
     name: string;
@@ -32,9 +32,11 @@ const Tours: React.FC = () => {
   const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [rejectingTour, setRejectingTour] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectingDeletionTour, setRejectingDeletionTour] = useState<string | null>(null);
+  const [deletionRejectionReason, setDeletionRejectionReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'all'>('pending');
   const [expandedTour, setExpandedTour] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
@@ -42,6 +44,7 @@ const Tours: React.FC = () => {
     pending: 0,
     approved: 0,
     rejected: 0,
+    pending_deletion: 0,
     all: 0
   });
 
@@ -57,7 +60,14 @@ const Tours: React.FC = () => {
       let endpoint = 'all';
       
       if (activeTab !== 'all') {
-        endpoint = activeTab;
+        // Map frontend tab names to API endpoint names
+        const endpointMap: { [key: string]: string } = {
+          'pending': 'pending',
+          'approved': 'approved',
+          'rejected': 'rejected',
+          'pending_deletion': 'pending-deletion'
+        };
+        endpoint = endpointMap[activeTab] || activeTab;
       }
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${endpoint}`, {
@@ -85,11 +95,12 @@ const Tours: React.FC = () => {
   const fetchTourCounts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const endpoints = ['pending', 'approved', 'rejected', 'all'];
+      const endpoints = ['pending', 'approved', 'rejected', 'pending-deletion', 'all'];
       const counts = {
         pending: 0,
         approved: 0,
         rejected: 0,
+        pending_deletion: 0,
         all: 0
       };
 
@@ -102,7 +113,15 @@ const Tours: React.FC = () => {
 
         if (response.ok) {
           const data = await response.json();
-          counts[endpoint as keyof typeof counts] = data.tours.length;
+          // Map API endpoint names back to frontend state names
+          const stateKeyMap: { [key: string]: string } = {
+            'pending': 'pending',
+            'approved': 'approved',
+            'rejected': 'rejected',
+            'pending-deletion': 'pending_deletion'
+          };
+          const stateKey = stateKeyMap[endpoint] || endpoint;
+          counts[stateKey as keyof typeof counts] = data.tours.length;
         }
       }
 
@@ -221,12 +240,85 @@ const Tours: React.FC = () => {
     }
   };
 
+  const openRejectDeletionModal = (tourId: string) => {
+    setRejectingDeletionTour(tourId);
+    setDeletionRejectionReason('');
+  };
+
+  const closeRejectDeletionModal = () => {
+    setRejectingDeletionTour(null);
+    setDeletionRejectionReason('');
+  };
+
+  const handleApproveDeletion = async (tourId: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this tour? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${tourId}/approve-deletion`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve deletion');
+      }
+
+      // Update local state and refresh counts
+      setTours(tours.filter(tour => tour._id !== tourId));
+      await fetchTourCounts();
+      alert('Tour deletion approved and completed');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const handleRejectDeletion = async (tourId: string) => {
+    if (!deletionRejectionReason.trim()) {
+      alert('Please provide a reason for rejecting the deletion');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${tourId}/reject-deletion`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rejectionReason: deletionRejectionReason }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reject deletion');
+      }
+
+      // Update local state and refresh counts
+      setTours(tours.map(tour => 
+        tour._id === tourId ? { ...tour, status: 'approved' as const } : tour
+      ));
+      setRejectingDeletionTour(null);
+      setDeletionRejectionReason('');
+      await fetchTourCounts();
+      alert('Deletion request rejected successfully');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
         return 'bg-green-100 text-green-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
+      case 'pending_deletion':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-yellow-100 text-yellow-800';
     }
@@ -290,6 +382,16 @@ const Tours: React.FC = () => {
           }`}
         >
           Rejected Tours ({tourCounts.rejected})
+        </button>
+        <button
+          onClick={() => setActiveTab('pending_deletion')}
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 'pending_deletion'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Pending Deletion ({tourCounts.pending_deletion})
         </button>
         <button
           onClick={() => setActiveTab('all')}
@@ -504,6 +606,23 @@ const Tours: React.FC = () => {
                     </button>
                   </div>
                 )}
+
+                {tour.status === 'pending_deletion' && (
+                  <div className="flex flex-col space-y-2 ml-4">
+                    <button
+                      onClick={() => handleApproveDeletion(tour._id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
+                      onClick={() => openRejectDeletionModal(tour._id)}
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    >
+                      Reject Deletion
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -536,6 +655,41 @@ const Tours: React.FC = () => {
               </button>
               <button
                 onClick={closeRejectModal}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deletion Rejection Modal */}
+      {rejectingDeletionTour && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">Reject Deletion Request</h2>
+            <p className="mb-4 text-gray-600">
+              Please provide a reason for rejecting this deletion request. This will be emailed to the guide.
+            </p>
+            <textarea
+              value={deletionRejectionReason}
+              onChange={(e) => setDeletionRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className="w-full p-3 border border-gray-300 rounded-md mb-4 resize-none"
+              rows={4}
+              required
+            />
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleRejectDeletion(rejectingDeletionTour)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex-1"
+                disabled={!deletionRejectionReason.trim()}
+              >
+                Reject Deletion
+              </button>
+              <button
+                onClick={closeRejectDeletionModal}
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
               >
                 Cancel
@@ -623,6 +777,7 @@ const Tours: React.FC = () => {
                     <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
                       selectedTourForDetails.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
                       selectedTourForDetails.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
+                      selectedTourForDetails.status === 'pending_deletion' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-400' :
                       'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
                     }`}>
                       {selectedTourForDetails.status.charAt(0).toUpperCase() + selectedTourForDetails.status.slice(1)}
@@ -711,6 +866,30 @@ const Tours: React.FC = () => {
                   className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600"
                 >
                   Reject Tour
+                </button>
+              </div>
+            )}
+
+            {/* Action Buttons for Pending Deletion Tours */}
+            {selectedTourForDetails.status === 'pending_deletion' && (
+              <div className="mt-6 flex gap-4">
+                <button
+                  onClick={() => {
+                    handleApproveDeletion(selectedTourForDetails._id);
+                    setDetailsModalOpen(false);
+                  }}
+                  className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  onClick={() => {
+                    openRejectDeletionModal(selectedTourForDetails._id);
+                    setDetailsModalOpen(false);
+                  }}
+                  className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+                >
+                  Reject Deletion
                 </button>
               </div>
             )}

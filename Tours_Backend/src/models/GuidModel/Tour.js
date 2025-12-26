@@ -67,7 +67,7 @@ const TourSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'rejected', 'pending_deletion'],
       default: 'pending',
     },
     isActive: {

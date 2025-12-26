@@ -38,6 +38,18 @@ export const getRejectedTours = async (req, res) => {
   }
 };
 
+export const getPendingDeletionTours = async (req, res) => {
+  try {
+    const pendingDeletionTours = await Tour.find({ status: 'pending_deletion' })
+      .populate('guide', 'name email')
+      .sort({ createdAt: -1 });
+    res.json({ tours: pendingDeletionTours });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const getAllTours = async (req, res) => {
   try {
     const tours = await Tour.find({})
@@ -144,11 +156,151 @@ export const rejectTour = async (req, res) => {
 export const deleteTour = async (req, res) => {
   try {
     const { tourId } = req.params;
-    const tour = await Tour.findByIdAndDelete(tourId);
+    const tour = await Tour.findById(tourId).populate('guide', 'name email');
 
     if (!tour) return res.status(404).json({ message: 'Tour not found' });
 
+    // If tour is approved, require manager confirmation
+    if (tour.status === 'approved') {
+      // Change status to pending_deletion
+      await Tour.findByIdAndUpdate(tourId, { status: 'pending_deletion' });
+
+      // Send email to manager for confirmation
+      try {
+        const mailOptions = {
+          to: process.env.MANAGER_EMAIL,
+          subject: 'Tour Deletion Request - Manager Approval Required',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ffc107;">Tour Deletion Request Pending Approval</h2>
+              <p>A request has been made to delete an approved tour. Your approval is required before the tour can be permanently deleted.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #495057;">Tour Details:</h3>
+                <p><strong>Title:</strong> ${tour.title}</p>
+                <p><strong>Guide:</strong> ${tour.guide.name} (${tour.guide.email})</p>
+                <p><strong>Status:</strong> Approved</p>
+                <p><strong>Requested by:</strong> ${req.user?.name || 'System'}</p>
+              </div>
+              <p>Please review this request and take appropriate action through the admin panel.</p>
+              <p>You can manage deletion requests at: <a href="${process.env.MANAGER_FRONTEND_URL}/tours">${process.env.MANAGER_FRONTEND_URL}/tours</a></p>
+              <p>Best regards,<br>Tours Management System</p>
+            </div>
+          `,
+        };
+
+        await sendEmail(mailOptions);
+      } catch (emailError) {
+        console.error('Failed to send deletion request email:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      return res.json({
+        message: 'Tour deletion request submitted for manager approval',
+        status: 'pending_deletion',
+        tour: { ...tour.toObject(), status: 'pending_deletion' }
+      });
+    }
+
+    // For non-approved tours, delete immediately
+    await Tour.findByIdAndDelete(tourId);
     res.json({ message: 'Tour deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const approveDeletion = async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    const tour = await Tour.findByIdAndDelete(tourId).populate('guide', 'name email');
+
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    if (tour.status !== 'pending_deletion') {
+      return res.status(400).json({ message: 'Tour is not pending deletion' });
+    }
+
+    // Send confirmation email to guide
+    try {
+      const mailOptions = {
+        to: tour.guide.email,
+        subject: 'Tour Deletion Approved',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Tour Deletion Approved</h2>
+            <p>Dear ${tour.guide.name},</p>
+            <p>Your tour "${tour.title}" has been permanently deleted from our system as per your request.</p>
+            <p>If this was done in error or you have any questions, please contact our support team immediately.</p>
+            <p>Best regards,<br>Tours Management Team</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send deletion approval email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({ message: 'Tour deletion approved and completed successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const rejectDeletion = async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    const { rejectionReason } = req.body;
+
+    if (!rejectionReason || rejectionReason.trim().length === 0) {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+
+    const tour = await Tour.findByIdAndUpdate(
+      tourId,
+      { status: 'approved' }, // Revert back to approved status
+      { new: true }
+    ).populate('guide', 'name email');
+
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    if (tour.status !== 'pending_deletion') {
+      return res.status(400).json({ message: 'Tour is not pending deletion' });
+    }
+
+    // Send rejection email to guide
+    try {
+      const mailOptions = {
+        to: tour.guide.email,
+        subject: 'Tour Deletion Request Rejected',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #28a745;">Tour Deletion Request Rejected</h2>
+            <p>Dear ${tour.guide.name},</p>
+            <p>Your request to delete the tour "${tour.title}" has been reviewed and rejected for the following reason:</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <p style="margin: 0; color: #495057;">${rejectionReason}</p>
+            </div>
+            <p>The tour remains active and available for booking. If you believe this decision was made in error, please contact our support team.</p>
+            <p>You can manage your tours at: <a href="${process.env.GUID_FRONTEND_URL}/tours">${process.env.GUID_FRONTEND_URL}/tours</a></p>
+            <p>Best regards,<br>Tours Management Team</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send deletion rejection email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({
+      message: 'Tour deletion request rejected successfully',
+      tour: { ...tour.toObject(), status: 'approved' }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

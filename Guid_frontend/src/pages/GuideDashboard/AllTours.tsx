@@ -18,7 +18,7 @@ interface Tour {
   difficulty: string;
   category: string;
   images: string[];
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'pending_deletion';
   isActive: boolean;
   createdAt: string;
   rejectionReason?: string;
@@ -103,6 +103,8 @@ const AllTours: React.FC = () => {
         return 'bg-green-100 text-green-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
+      case 'pending_deletion':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-yellow-100 text-yellow-800';
     }
@@ -145,7 +147,7 @@ const AllTours: React.FC = () => {
     let confirmMessage = 'Are you sure you want to delete this tour?';
     
     if (tour?.status === 'approved') {
-      confirmMessage = 'This tour is approved. Deleting it will notify the manager for review. Are you sure you want to continue?';
+      confirmMessage = 'This tour is approved. Deleting it will require manager approval. Are you sure you want to continue?';
     }
 
     if (window.confirm(confirmMessage)) {
@@ -158,12 +160,24 @@ const AllTours: React.FC = () => {
           },
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-          setTours(tours.filter(t => t._id !== tourId));
-          setFilteredTours(filteredTours.filter(t => t._id !== tourId));
-          alert('Tour deleted successfully');
+          if (data.status === 'pending_deletion') {
+            // Update tour status to pending_deletion instead of removing it
+            const updatedTours = tours.map(t => 
+              t._id === tourId ? { ...t, status: 'pending_deletion' as const } : t
+            );
+            setTours(updatedTours);
+            alert('Deletion request submitted. Waiting for manager approval.');
+          } else {
+            // For non-approved tours, remove from list
+            setTours(tours.filter(t => t._id !== tourId));
+            setFilteredTours(filteredTours.filter(t => t._id !== tourId));
+            alert('Tour deleted successfully');
+          }
         } else {
-          alert('Failed to delete tour');
+          alert(data.message || 'Failed to delete tour');
         }
       } catch (error) {
         console.error('Error deleting tour:', error);
@@ -444,13 +458,22 @@ const AllTours: React.FC = () => {
                         Edit
                       </button>
 
-                      {/* Delete Button - available for all statuses, but may require permission for approved */}
-                      <button
-                        onClick={() => handleDelete(tour._id)}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium underline"
-                      >
-                        Delete
-                      </button>
+                      {/* Delete Button - available for all statuses except pending_deletion */}
+                      {tour.status !== 'pending_deletion' && (
+                        <button
+                          onClick={() => handleDelete(tour._id)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium underline"
+                        >
+                          Delete
+                        </button>
+                      )}
+
+                      {/* Pending Deletion Status Indicator */}
+                      {tour.status === 'pending_deletion' && (
+                        <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">
+                          Pending Manager Approval
+                        </span>
+                      )}
 
                       {/* Resubmit Button - only for rejected tours */}
                       {tour.status === 'rejected' && (

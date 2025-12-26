@@ -72,7 +72,7 @@ export const createTour = async (req, res) => {
     // Send notification email to admin
     try {
       const mailOptions = {
-        to: process.env.EMAIL_USER,
+        to: process.env.MANAGER_EMAIL,
         subject: 'New Tour Submitted for Approval',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -141,7 +141,7 @@ export const updateTour = async (req, res) => {
     if (tour.status === 'approved') {
       try {
         const mailOptions = {
-          to: process.env.EMAIL_USER,
+          to: process.env.MANAGER_EMAIL,
           subject: 'Approved Tour Modified - Requires Review',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -263,27 +263,40 @@ export const deleteTour = async (req, res) => {
     if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
     if (!tourId || typeof tourId !== 'string') return res.status(400).json({ message: 'Invalid tour ID' });
 
-    const tour = await Tour.findOneAndDelete({ _id: tourId, guide: guideId });
+    const tour = await Tour.findOne({ _id: tourId, guide: guideId });
     if (!tour) return res.status(404).json({ message: 'Tour not found' });
 
-    // Send notification email to admin if this was an approved tour
+    // Prevent deletion if tour is already pending deletion
+    if (tour.status === 'pending_deletion') {
+      return res.status(400).json({
+        message: 'This tour is already pending deletion approval from the manager. Please wait for manager confirmation.'
+      });
+    }
+
+    // Handle approved tours differently - require manager confirmation
     if (tour.status === 'approved') {
+      // Change status to pending_deletion instead of deleting
+      await Tour.findByIdAndUpdate(tourId, { status: 'pending_deletion' });
+
+      // Send notification email to manager for confirmation
       try {
         const mailOptions = {
-          to: process.env.EMAIL_USER,
-          subject: 'Approved Tour Deleted - Requires Attention',
+          to: process.env.MANAGER_EMAIL,
+          subject: 'Tour Deletion Request - Manager Confirmation Required',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #dc3545;">Approved Tour Deleted</h2>
-              <p>An approved tour has been deleted by its guide.</p>
+              <h2 style="color: #dc3545;">Tour Deletion Request</h2>
+              <p>A guide has requested to delete an approved tour. Your confirmation is required.</p>
               <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #495057;">Deleted Tour Details:</h3>
+                <h3 style="margin-top: 0; color: #495057;">Tour Details:</h3>
                 <p><strong>Title:</strong> ${tour.title}</p>
                 <p><strong>Location:</strong> ${tour.location}</p>
+                <p><strong>Price:</strong> $${tour.price}</p>
                 <p><strong>Guide:</strong> ${req.user.name || 'Guide'}</p>
-                <p><strong>Deleted At:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Requested At:</strong> ${new Date().toLocaleString()}</p>
               </div>
-              <p>This action may require your attention. Please check if this deletion was authorized.</p>
+              <p>Please log in to the admin panel to approve or reject this deletion request.</p>
+              <p><strong>Note:</strong> The tour is currently marked as "pending deletion" and is not visible to customers.</p>
               <p>Best regards,<br>Tours Management System</p>
             </div>
           `,
@@ -291,14 +304,21 @@ export const deleteTour = async (req, res) => {
 
         await sendEmail(mailOptions);
       } catch (emailError) {
-        console.error('Failed to send deletion notification email:', emailError);
-        // Don't fail the request if email fails
+        console.error('Failed to send deletion request email:', emailError);
       }
+
+      return res.status(200).json({
+        message: 'Deletion request submitted. Waiting for manager approval.',
+        status: 'pending_deletion'
+      });
     }
 
-    res.json({ message: 'Tour deleted successfully' });
+    // For non-approved tours, delete immediately
+    await Tour.findByIdAndDelete(tourId);
+
+    res.status(200).json({ message: 'Tour deleted successfully' });
   } catch (error) {
-    console.error(error);
+    console.error('Error in deleteTour:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

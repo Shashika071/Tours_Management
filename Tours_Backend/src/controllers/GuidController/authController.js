@@ -26,7 +26,7 @@ export const verifyOtp = async (req, res) => {
     // Send notification to manager
     try {
       const managerMailOptions = {
-        to: process.env.EMAIL_USER,
+        to: process.env.MANAGER_EMAIL,
         subject: 'New Guide Registration Request',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -308,7 +308,7 @@ export const updateProfileDetails = async (req, res) => {
     if (requiresReApproval) {
       try {
         const managerMailOptions = {
-          to: process.env.EMAIL_USER,
+          to: process.env.MANAGER_EMAIL,
           subject: 'Guide Profile Update: Approval Required',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
