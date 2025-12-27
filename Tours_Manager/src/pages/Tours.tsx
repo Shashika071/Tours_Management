@@ -31,6 +31,12 @@ interface Tour {
     endDate: string | null;
     isActive: boolean;
   };
+  tourType?: 'standard' | 'bid';
+  bidDetails?: {
+    startingPrice: number;
+    bidEndDate: string;
+    currentHighestBid: number;
+  };
 }
 
 const Tours: React.FC = () => {
@@ -59,6 +65,7 @@ const Tours: React.FC = () => {
   const [guideFilter, setGuideFilter] = useState<string>('all');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [offerFilter, setOfferFilter] = useState<string>('all');
+  const [tourTypeFilter, setTourTypeFilter] = useState<string>('all');
 
   const fetchTours = useCallback(async () => {
     try {
@@ -170,8 +177,12 @@ const Tours: React.FC = () => {
       });
     }
 
+    if (tourTypeFilter !== 'all') {
+      filtered = filtered.filter(tour => (tour.tourType || 'standard') === tourTypeFilter);
+    }
+
     setFilteredTours(filtered);
-  }, [tours, difficultyFilter, categoryFilter, guideFilter, activeFilter, offerFilter]);
+  }, [tours, difficultyFilter, categoryFilter, guideFilter, activeFilter, offerFilter, tourTypeFilter]);
 
   const resetFilters = () => {
     setDifficultyFilter('all');
@@ -179,6 +190,7 @@ const Tours: React.FC = () => {
     setGuideFilter('all');
     setActiveFilter('all');
     setOfferFilter('all');
+    setTourTypeFilter('all');
   };
 
   useEffect(() => {
@@ -513,13 +525,30 @@ const Tours: React.FC = () => {
               <option value="no_offer">No Active Offers</option>
             </select>
           </div>
+
+          {/* Tour Type Filter */}
+          <div>
+            <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Tour Type
+            </label>
+            <select
+              id="type-filter"
+              value={tourTypeFilter}
+              onChange={(e) => setTourTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Types</option>
+              <option value="standard">Standard Tours</option>
+              <option value="bid">Bid Tours</option>
+            </select>
+          </div>
         </div>
 
         {/* Filter Summary */}
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-600">
             Showing {filteredTours.length} of {tours.length} tours
-            {(difficultyFilter !== 'all' || categoryFilter !== 'all' || guideFilter !== 'all' || activeFilter !== 'all' || offerFilter !== 'all') && (
+            {(difficultyFilter !== 'all' || categoryFilter !== 'all' || guideFilter !== 'all' || activeFilter !== 'all' || offerFilter !== 'all' || tourTypeFilter !== 'all') && (
               <span className="ml-2 text-blue-600">
                 (filtered)
               </span>
@@ -551,6 +580,11 @@ const Tours: React.FC = () => {
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColor(tour.status)}`}>
                         {tour.status.replace('_', ' ')}
                       </span>
+                      {tour.tourType === 'bid' && (
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200">
+                          BID TOUR
+                        </span>
+                      )}
                       {!tour.isActive && (
                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200">
                           Inactive
@@ -570,20 +604,34 @@ const Tours: React.FC = () => {
                         {tour.offer.discountPercentage}% OFF OFFER
                       </div>
                     )}
+                    {tour.tourType === 'bid' && tour.bidDetails && (
+                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-amber-200">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Bidding Ends: {new Date(tour.bidDetails.bidEndDate).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price / Person</p>
-                      {tour.offer && tour.offer.isActive && tour.offer.discountPercentage > 0 ? (
-                        <div className="flex flex-col items-end">
-                          <span className="text-xs text-gray-400 line-through font-bold leading-none">${tour.price}</span>
-                          <p className="text-2xl font-black text-brand-500 tracking-tighter leading-tight">
-                            ${(tour.price * (1 - tour.offer.discountPercentage / 100)).toFixed(2)}
-                          </p>
-                        </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">
+                        {tour.tourType === 'bid' ? 'Starting Price' : 'Price / Person'}
+                      </p>
+                      {tour.tourType === 'bid' ? (
+                        <p className="text-2xl font-black text-amber-600 tracking-tighter">${tour.bidDetails?.startingPrice}</p>
                       ) : (
-                        <p className="text-2xl font-black text-brand-500 tracking-tighter">${tour.price}</p>
+                        tour.offer && tour.offer.isActive && tour.offer.discountPercentage > 0 ? (
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs text-gray-400 line-through font-bold leading-none">${tour.price}</span>
+                            <p className="text-2xl font-black text-brand-500 tracking-tighter leading-tight">
+                              ${(tour.price * (1 - tour.offer.discountPercentage / 100)).toFixed(2)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-2xl font-black text-brand-500 tracking-tighter">${tour.price}</p>
+                        )
                       )}
                     </div>
                     <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden lg:block"></div>
@@ -698,77 +746,82 @@ const Tours: React.FC = () => {
             </div>
           ))}
         </div>
-      )}
+      )
+      }
 
       {/* Rejection Modal */}
-      {rejectingTour && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">Reject Tour</h2>
-            <p className="mb-4 text-gray-600">
-              Please provide a reason for rejecting this tour. This will be emailed to the guide.
-            </p>
-            <textarea
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
-              className="w-full p-3 border border-gray-300 rounded-md mb-4 resize-none"
-              rows={4}
-              required
-            />
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleReject(rejectingTour)}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex-1"
-                disabled={!rejectionReason.trim()}
-              >
-                Reject Tour
-              </button>
-              <button
-                onClick={closeRejectModal}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
+      {
+        rejectingTour && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold mb-4">Reject Tour</h2>
+              <p className="mb-4 text-gray-600">
+                Please provide a reason for rejecting this tour. This will be emailed to the guide.
+              </p>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Enter rejection reason..."
+                className="w-full p-3 border border-gray-300 rounded-md mb-4 resize-none"
+                rows={4}
+                required
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleReject(rejectingTour)}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex-1"
+                  disabled={!rejectionReason.trim()}
+                >
+                  Reject Tour
+                </button>
+                <button
+                  onClick={closeRejectModal}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Deletion Rejection Modal */}
-      {rejectingDeletionTour && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">Reject Deletion Request</h2>
-            <p className="mb-4 text-gray-600">
-              Please provide a reason for rejecting this deletion request. This will be emailed to the guide.
-            </p>
-            <textarea
-              value={deletionRejectionReason}
-              onChange={(e) => setDeletionRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
-              className="w-full p-3 border border-gray-300 rounded-md mb-4 resize-none"
-              rows={4}
-              required
-            />
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleRejectDeletion(rejectingDeletionTour)}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex-1"
-                disabled={!deletionRejectionReason.trim()}
-              >
-                Reject Deletion
-              </button>
-              <button
-                onClick={closeRejectDeletionModal}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
+      {
+        rejectingDeletionTour && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold mb-4">Reject Deletion Request</h2>
+              <p className="mb-4 text-gray-600">
+                Please provide a reason for rejecting this deletion request. This will be emailed to the guide.
+              </p>
+              <textarea
+                value={deletionRejectionReason}
+                onChange={(e) => setDeletionRejectionReason(e.target.value)}
+                placeholder="Enter rejection reason..."
+                className="w-full p-3 border border-gray-300 rounded-md mb-4 resize-none"
+                rows={4}
+                required
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleRejectDeletion(rejectingDeletionTour)}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex-1"
+                  disabled={!deletionRejectionReason.trim()}
+                >
+                  Reject Deletion
+                </button>
+                <button
+                  onClick={closeRejectDeletionModal}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <Modal
         isOpen={detailsModalOpen}
@@ -854,8 +907,12 @@ const Tours: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Price / Person</p>
-                  <p className="text-2xl font-black text-brand-600 tracking-tighter">${selectedTourForDetails.price}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                    {selectedTourForDetails.tourType === 'bid' ? 'Starting Price' : 'Price / Person'}
+                  </p>
+                  <p className="text-2xl font-black text-brand-600 tracking-tighter">
+                    ${selectedTourForDetails.tourType === 'bid' ? selectedTourForDetails.bidDetails?.startingPrice : selectedTourForDetails.price}
+                  </p>
                 </div>
               </section>
 
@@ -882,6 +939,38 @@ const Tours: React.FC = () => {
                   </div>
                 </div>
               </section>
+
+              {/* Bid Information Section */}
+              {selectedTourForDetails.tourType === 'bid' && selectedTourForDetails.bidDetails && (
+                <section className="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-6 border border-amber-100 dark:border-amber-900/30">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-600">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1">Bid Information</p>
+                        <h4 className="text-lg font-bold text-amber-900 dark:text-amber-100">Active Bidding Tour</h4>
+                        <p className="text-sm text-amber-700 dark:text-amber-400">
+                          Bids started at ${selectedTourForDetails.bidDetails.startingPrice}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-8">
+                      <div className="text-center md:text-right">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1">Highest Bid</p>
+                        <p className="text-xl font-black text-amber-900 dark:text-amber-100">${selectedTourForDetails.bidDetails.currentHighestBid || selectedTourForDetails.bidDetails.startingPrice}</p>
+                      </div>
+                      <div className="text-center md:text-right">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1">Bidding Ends</p>
+                        <p className="text-sm font-bold text-amber-900 dark:text-amber-100">{new Date(selectedTourForDetails.bidDetails.bidEndDate).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* Offer Information Section */}
               {selectedTourForDetails.offer && selectedTourForDetails.offer.isActive && selectedTourForDetails.offer.discountPercentage > 0 && (
@@ -1020,7 +1109,7 @@ const Tours: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </div >
   );
 };
 

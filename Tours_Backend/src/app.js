@@ -1,14 +1,15 @@
 import adminAuthRoutes from './routes/AdminRouter/auth.js';
 import adminGuideRoutes from './routes/AdminRouter/guide.js';
-import adminTourRoutes from './routes/AdminRouter/tour.js';
 import adminPromotionRoutes from './routes/AdminRouter/promotion.js';
+import adminTourRoutes from './routes/AdminRouter/tour.js';
 import authRoutes from './routes/ClientRouter/auth.js';
+import clientTourRoutes from './routes/ClientRouter/tour.js';
 import cors from 'cors';
 import express from 'express';
 import { fileURLToPath } from 'url';
 import guideAuthRoutes from './routes/GuidRouter/auth.js';
-import guideTourRoutes from './routes/GuidRouter/tour.js';
 import guidePromotionRoutes from './routes/GuidRouter/promotion.js';
+import guideTourRoutes from './routes/GuidRouter/tour.js';
 import multer from 'multer';
 import passport from './config/passport.js';
 import path from 'path';
@@ -35,6 +36,7 @@ app.use('/api/admin/promotions', adminPromotionRoutes);
 app.use('/api/guide/auth', guideAuthRoutes);
 app.use('/api/guide/tours', guideTourRoutes);
 app.use('/api/guide/promotions', guidePromotionRoutes);
+app.use('/api/tours', clientTourRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'Server is running' }));
 

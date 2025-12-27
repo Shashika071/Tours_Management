@@ -23,6 +23,12 @@ interface Tour {
   isActive: boolean;
   createdAt: string;
   rejectionReason?: string;
+  tourType?: 'standard' | 'bid';
+  bidDetails?: {
+    startingPrice: number;
+    bidEndDate: string;
+    currentHighestBid: number;
+  };
 }
 
 const AllTours: React.FC = () => {
@@ -40,7 +46,7 @@ const AllTours: React.FC = () => {
 
   // Apply filters whenever tours or filter states change
   useEffect(() => {
-    let filtered = [...tours];
+    let filtered = tours.filter(tour => (tour.tourType || 'standard') === 'standard');
 
     if (statusFilter !== 'all') {
       filtered = filtered.filter(tour => tour.status === statusFilter);

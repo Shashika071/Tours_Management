@@ -4,7 +4,7 @@ import { sendEmail } from '../../utils/emailserver.js';
 export const createTour = async (req, res) => {
   try {
     console.log('Creating tour for user:', req.user);
-    const guideId = req.user.userId;
+    const guideId = req.user.userId || req.user.id;
     if (!guideId || typeof guideId !== 'string') {
       console.log('Invalid user ID:', guideId);
       return res.status(400).json({ message: 'Invalid user ID' });
@@ -22,14 +22,39 @@ export const createTour = async (req, res) => {
       maxParticipants,
       difficulty,
       category,
+      tourType,
+      startingPrice,
+      bidEndDate,
     } = req.body;
 
     console.log('Tour data received:', { title, description, price, duration, location });
 
     // Validate required fields
-    if (!title || !description || !price || !duration || !location) {
+    if (!title || !description || !duration || !location) {
       console.log('Missing required fields');
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // For standard tours, price is required
+    if (tourType !== 'bid' && !price) {
+      console.log('Price is required for standard tours');
+      return res.status(400).json({ message: 'Price is required for standard tours' });
+    }
+
+    // For bid tours, startingPrice and bidEndDate are required
+    if (tourType === 'bid' && (!startingPrice || !bidEndDate)) {
+      return res.status(400).json({ message: 'Starting price and bid end date are required for bid tours' });
+    }
+
+    // Validate bid end date is in the future
+    if (tourType === 'bid') {
+      const bidEnd = new Date(bidEndDate);
+      if (isNaN(bidEnd.getTime())) {
+        return res.status(400).json({ message: 'Invalid bid end date' });
+      }
+      if (bidEnd <= new Date()) {
+        return res.status(400).json({ message: 'Bid end date must be in the future' });
+      }
     }
 
     // Handle multiple image uploads
@@ -52,7 +77,7 @@ export const createTour = async (req, res) => {
     const tour = new Tour({
       title: title.trim(),
       description: description.trim(),
-      price: Number(price),
+      price: tourType === 'bid' ? Number(startingPrice) : Number(price),
       duration: duration.trim(),
       location: location.trim(),
       itinerary: itinerary ? itinerary.trim() : null,
@@ -63,6 +88,12 @@ export const createTour = async (req, res) => {
       category: category || 'Other',
       images: imagePaths,
       guide: guideId,
+      tourType: tourType || 'standard',
+      bidDetails: tourType === 'bid' ? {
+        startingPrice: Number(startingPrice),
+        bidEndDate: new Date(bidEndDate),
+        currentHighestBid: Number(startingPrice)
+      } : undefined
     });
 
     console.log('Saving tour...');
@@ -110,7 +141,7 @@ export const createTour = async (req, res) => {
 
 export const getMyTours = async (req, res) => {
   try {
-    const guideId = req.user.userId;
+    const guideId = req.user.userId || req.user.id;
     if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
 
     const tours = await Tour.find({ guide: guideId }).sort({ createdAt: -1 });
@@ -123,7 +154,7 @@ export const getMyTours = async (req, res) => {
 
 export const updateTour = async (req, res) => {
   try {
-    const guideId = req.user.userId;
+    const guideId = req.user.userId || req.user.id;
     const { tourId } = req.params;
 
     if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
@@ -192,6 +223,9 @@ const processTourUpdateData = (req, tour) => {
     maxParticipants,
     difficulty,
     category,
+    tourType,
+    startingPrice,
+    bidEndDate,
   } = req.body;
 
   // Update basic fields
@@ -207,7 +241,10 @@ const processTourUpdateData = (req, tour) => {
     maxParticipants,
     difficulty,
     category,
-  });
+    tourType,
+    startingPrice,
+    bidEndDate,
+  }, tour);
 
   // Handle image uploads
   updateImages(updateData, req, tour);
@@ -219,7 +256,7 @@ const processTourUpdateData = (req, tour) => {
 };
 
 // Helper function to update basic tour fields
-const updateBasicFields = (updateData, fields) => {
+const updateBasicFields = (updateData, fields, tour) => {
   const fieldMappings = {
     title: (value) => value.trim(),
     description: (value) => value.trim(),
@@ -232,12 +269,33 @@ const updateBasicFields = (updateData, fields) => {
     maxParticipants: (value) => value ? Number(value) : null,
     difficulty: (value) => value,
     category: (value) => value,
+    tourType: (value) => value,
   };
 
   for (const [field, transformer] of Object.entries(fieldMappings)) {
     const value = fields[field];
     if (value !== undefined && value !== null && value !== '') {
+      // Prevent changing startingPrice for approved bid tours
+
       updateData[field] = transformer(value);
+    }
+  }
+
+  // Handle bidDetails separately
+  if (fields.tourType === 'bid' || tour.tourType === 'bid') {
+    updateData.bidDetails = {
+      ...(tour.bidDetails ? tour.bidDetails.toObject() : {}),
+    };
+
+    if (fields.startingPrice !== undefined && fields.startingPrice !== '') {
+      // Prevent changing startingPrice for approved bid tours
+      if (!(tour.status === 'approved' && tour.tourType === 'bid')) {
+        updateData.bidDetails.startingPrice = Number(fields.startingPrice);
+      }
+    }
+
+    if (fields.bidEndDate !== undefined && fields.bidEndDate !== '') {
+      updateData.bidDetails.bidEndDate = new Date(fields.bidEndDate);
     }
   }
 };
@@ -257,7 +315,7 @@ const updateImages = (updateData, req, tour) => {
 
 export const deleteTour = async (req, res) => {
   try {
-    const guideId = req.user.userId;
+    const guideId = req.user.userId || req.user.id;
     const { tourId } = req.params;
 
     if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
@@ -325,7 +383,7 @@ export const deleteTour = async (req, res) => {
 
 export const resubmitTour = async (req, res) => {
   try {
-    const guideId = req.user.userId;
+    const guideId = req.user.userId || req.user.id;
     const { tourId } = req.params;
 
     if (!guideId || typeof guideId !== 'string') return res.status(400).json({ message: 'Invalid user ID' });
@@ -348,7 +406,7 @@ export const resubmitTour = async (req, res) => {
 
 export const updateTourOffer = async (req, res) => {
   try {
-    const guideId = req.user.userId;
+    const guideId = req.user.userId || req.user.id;
     const { tourId } = req.params;
     const { discountPercentage, startDate, endDate, isActive } = req.body;
 
@@ -356,6 +414,11 @@ export const updateTourOffer = async (req, res) => {
 
     const tour = await Tour.findOne({ _id: tourId, guide: guideId });
     if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    // Prevent offers on bid tours
+    if (tour.tourType === 'bid') {
+      return res.status(400).json({ message: 'Cannot add offers to bid tours' });
+    }
 
     tour.offer = {
       discountPercentage: Number(discountPercentage) || 0,

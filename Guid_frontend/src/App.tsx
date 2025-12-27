@@ -1,4 +1,5 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router";
+import { Suspense, lazy } from "react";
 
 import Alerts from "./pages/UiElements/Alerts";
 import AllTours from "./pages/GuideDashboard/AllTours";
@@ -32,11 +33,15 @@ import CreatePromotionRequest from "./pages/Promotions/CreatePromotionRequest";
 import AddOffer from "./pages/Offers/AddOffer";
 import ManageOffers from "./pages/Offers/ManageOffers";
 
+// Lazy load new bid components
+const AddBidTour = lazy(() => import('./pages/GuideDashboard/AddBidTour'));
+const ManageBidTours = lazy(() => import('./pages/GuideDashboard/ManageBidTours'));
+
 export default function App() {
   return (
-    <>
-      <Router>
-        <ScrollToTop />
+    <Router>
+      <ScrollToTop />
+      <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
@@ -48,6 +53,11 @@ export default function App() {
             <Route path="/tours/manage" element={<AllTours />} />
             <Route path="/tours/promote" element={<PromoteTours />} />
             <Route path="/tours/promote/new" element={<CreatePromotionRequest />} />
+
+            {/* Bid Tours */}
+            <Route path="/tours/bid/add" element={<AddBidTour />} />
+            <Route path="/tours/bid/manage" element={<ManageBidTours />} />
+
             <Route path="/tours/categories" element={<PlaceholderPage title="Tour Categories" description="Organize tours by categories and types." />} />
             <Route path="/tours/locations" element={<PlaceholderPage title="Tour Locations" description="Manage tour destinations and locations." />} />
             <Route path="/tours/calendar" element={<PlaceholderPage title="Tour Calendar" description="Visual calendar showing all scheduled tours." />} />
@@ -130,7 +140,7 @@ export default function App() {
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
-    </>
+      </Suspense>
+    </Router>
   );
 }

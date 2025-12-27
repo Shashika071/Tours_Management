@@ -16,7 +16,6 @@ const TourSchema = new Schema(
     },
     price: {
       type: Number,
-      required: true,
       min: 0,
     },
     duration: {
@@ -96,6 +95,26 @@ const TourSchema = new Schema(
       isActive: {
         type: Boolean,
         default: false,
+      }
+    },
+    tourType: {
+      type: String,
+      enum: ['standard', 'bid'],
+      default: 'standard',
+    },
+    bidDetails: {
+      startingPrice: {
+        type: Number,
+        min: 0,
+        default: null,
+      },
+      bidEndDate: {
+        type: Date,
+        default: null,
+      },
+      currentHighestBid: {
+        type: Number,
+        default: 0,
       }
     }
   },

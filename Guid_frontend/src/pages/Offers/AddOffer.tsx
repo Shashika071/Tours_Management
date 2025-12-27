@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
+
 import PageMeta from '../../components/common/PageMeta';
+import { useNavigate } from 'react-router';
 import { useTour } from '../../context/TourContext';
 
 const AddOffer: React.FC = () => {
     const navigate = useNavigate();
     const { tours, updateOffer } = useTour();
-    const approvedTours = tours.filter(t => t.status === 'approved');
+    const approvedTours = tours.filter(t => t.status === 'approved' && t.tourType !== 'bid');
 
     const [selectedTour, setSelectedTour] = useState('');
     const [discount, setDiscount] = useState(0);

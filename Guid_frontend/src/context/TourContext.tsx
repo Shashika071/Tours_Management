@@ -24,6 +24,12 @@ interface Tour {
     endDate: string | null;
     isActive: boolean;
   };
+  tourType: 'standard' | 'bid';
+  bidDetails?: {
+    startingPrice: number;
+    bidEndDate: string;
+    currentHighestBid: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

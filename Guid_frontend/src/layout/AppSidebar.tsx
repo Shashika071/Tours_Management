@@ -49,6 +49,15 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    icon: <GridIcon />,
+    name: "Bid Tours",
+    requiresApproval: true,
+    subItems: [
+      { name: "Add Bid Tour", path: "/tours/bid/add", pro: false },
+      { name: "Manage Bid Tours", path: "/tours/bid/manage", pro: false },
+    ],
+  },
+  {
     icon: <ListIcon />,
     name: "Bookings",
     requiresApproval: true,
