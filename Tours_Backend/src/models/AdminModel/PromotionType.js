@@ -24,6 +24,12 @@ const PromotionTypeSchema = new Schema(
             type: Boolean,
             default: true,
         },
+        slots: {
+            type: Number,
+            required: true,
+            default: 0,
+            min: 0,
+        },
     },
     {
         timestamps: true,

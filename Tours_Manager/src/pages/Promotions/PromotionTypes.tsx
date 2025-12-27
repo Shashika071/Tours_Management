@@ -7,6 +7,8 @@ interface PromotionType {
     dailyCost: number;
     description: string;
     isActive: boolean;
+    slots: number;
+    availableSlots?: number;
 }
 
 const PromotionTypes: React.FC = () => {
@@ -14,7 +16,7 @@ const PromotionTypes: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingType, setEditingType] = useState<PromotionType | null>(null);
-    const [formData, setFormData] = useState({ name: '', dailyCost: 0, description: '' });
+    const [formData, setFormData] = useState({ name: '', dailyCost: 0, description: '', slots: 0 });
 
     useEffect(() => {
         fetchTypes();
@@ -58,7 +60,7 @@ const PromotionTypes: React.FC = () => {
                 fetchTypes();
                 setIsModalOpen(false);
                 setEditingType(null);
-                setFormData({ name: '', dailyCost: 0, description: '' });
+                setFormData({ name: '', dailyCost: 0, description: '', slots: 0 });
             }
         } catch (error) {
             console.error('Error saving type:', error);
@@ -67,7 +69,7 @@ const PromotionTypes: React.FC = () => {
 
     const handleEdit = (type: PromotionType) => {
         setEditingType(type);
-        setFormData({ name: type.name, dailyCost: type.dailyCost, description: type.description });
+        setFormData({ name: type.name, dailyCost: type.dailyCost, description: type.description, slots: type.slots });
         setIsModalOpen(true);
     };
 
@@ -92,7 +94,7 @@ const PromotionTypes: React.FC = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Promotion Types</h1>
                     <button
-                        onClick={() => { setEditingType(null); setFormData({ name: '', dailyCost: 0, description: '' }); setIsModalOpen(true); }}
+                        onClick={() => { setEditingType(null); setFormData({ name: '', dailyCost: 0, description: '', slots: 0 }); setIsModalOpen(true); }}
                         className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                     >
                         Add New Type
@@ -105,6 +107,7 @@ const PromotionTypes: React.FC = () => {
                             <tr>
                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Daily Cost</th>
+                                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Slots (Total/Avail)</th>
                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -119,6 +122,9 @@ const PromotionTypes: React.FC = () => {
                                     <tr key={type._id}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{type.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${type.dailyCost}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                            <span className="font-semibold">{type.slots}</span> / <span className={`${(type.availableSlots || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>{type.availableSlots ?? type.slots}</span>
+                                        </td>
                                         <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{type.description}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button onClick={() => handleEdit(type)} className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
@@ -138,14 +144,37 @@ const PromotionTypes: React.FC = () => {
                             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{editingType ? 'Edit' : 'Add'} Promotion Type</h2>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                                    <input
-                                        type="text"
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Promotion Name</label>
+                                    <select
                                         required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                                    />
+                                        value={['Featured Promo', 'Top Tours Promo', 'All Tours Top 20'].includes(formData.name) ? formData.name : (formData.name ? 'custom' : '')}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === 'custom') {
+                                                setFormData({ ...formData, name: '' });
+                                            } else {
+                                                setFormData({ ...formData, name: val });
+                                            }
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white mb-2"
+                                    >
+                                        <option value="" disabled>Select a promotion type...</option>
+                                        <option value="Featured Promo">Featured Promo</option>
+                                        <option value="Top Tours Promo">Top Tours Promo</option>
+                                        <option value="All Tours Top 20">All Tours Top 20</option>
+                                        <option value="custom">Add Custom Promotion</option>
+                                    </select>
+
+                                    {(!['Featured Promo', 'Top Tours Promo', 'All Tours Top 20'].includes(formData.name) || formData.name === '') && (
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Enter custom promotion name"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Daily Cost ($)</label>
@@ -163,6 +192,17 @@ const PromotionTypes: React.FC = () => {
                                         required
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Slots</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="0"
+                                        value={formData.slots}
+                                        onChange={(e) => setFormData({ ...formData, slots: parseInt(e.target.value) })}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>

@@ -25,6 +25,12 @@ interface Tour {
   isActive: boolean;
   createdAt: string;
   rejectionReason?: string;
+  offer?: {
+    discountPercentage: number;
+    startDate: string | null;
+    endDate: string | null;
+    isActive: boolean;
+  };
 }
 
 const Tours: React.FC = () => {
@@ -36,7 +42,7 @@ const Tours: React.FC = () => {
   const [deletionRejectionReason, setDeletionRejectionReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'all'>('all');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
   const [tourCounts, setTourCounts] = useState({
@@ -52,6 +58,7 @@ const Tours: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [guideFilter, setGuideFilter] = useState<string>('all');
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [offerFilter, setOfferFilter] = useState<string>('all');
 
   const fetchTours = useCallback(async () => {
     try {
@@ -155,14 +162,23 @@ const Tours: React.FC = () => {
       filtered = filtered.filter(tour => tour.isActive === isActive);
     }
 
+    if (offerFilter !== 'all') {
+      const hasOffer = offerFilter === 'has_offer';
+      filtered = filtered.filter(tour => {
+        const activeOffer = tour.offer && tour.offer.isActive && tour.offer.discountPercentage > 0;
+        return hasOffer ? activeOffer : !activeOffer;
+      });
+    }
+
     setFilteredTours(filtered);
-  }, [tours, difficultyFilter, categoryFilter, guideFilter, activeFilter]);
+  }, [tours, difficultyFilter, categoryFilter, guideFilter, activeFilter, offerFilter]);
 
   const resetFilters = () => {
     setDifficultyFilter('all');
     setCategoryFilter('all');
     setGuideFilter('all');
     setActiveFilter('all');
+    setOfferFilter('all');
   };
 
   useEffect(() => {
@@ -476,9 +492,25 @@ const Tours: React.FC = () => {
               onChange={(e) => setActiveFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="all">All Tours</option>
               <option value="active">Active Only</option>
               <option value="inactive">Inactive Only</option>
+            </select>
+          </div>
+
+          {/* Offer Status Filter */}
+          <div>
+            <label htmlFor="offer-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Offer Status
+            </label>
+            <select
+              id="offer-filter"
+              value={offerFilter}
+              onChange={(e) => setOfferFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All (Offers & Regular)</option>
+              <option value="has_offer">With Active Offers</option>
+              <option value="no_offer">No Active Offers</option>
             </select>
           </div>
         </div>
@@ -487,7 +519,7 @@ const Tours: React.FC = () => {
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-600">
             Showing {filteredTours.length} of {tours.length} tours
-            {(difficultyFilter !== 'all' || categoryFilter !== 'all' || guideFilter !== 'all' || activeFilter !== 'all') && (
+            {(difficultyFilter !== 'all' || categoryFilter !== 'all' || guideFilter !== 'all' || activeFilter !== 'all' || offerFilter !== 'all') && (
               <span className="ml-2 text-blue-600">
                 (filtered)
               </span>
@@ -530,12 +562,29 @@ const Tours: React.FC = () => {
                       <span className="text-gray-300 dark:text-gray-600">|</span>
                       <span>Added on {new Date(tour.createdAt).toLocaleDateString()}</span>
                     </div>
+                    {tour.offer && tour.offer.isActive && tour.offer.discountPercentage > 0 && (
+                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-lg text-[10px] font-black uppercase tracking-tighter bg-gradient-to-r from-red-50 to-red-100 border border-red-200">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                        </svg>
+                        {tour.offer.discountPercentage}% OFF OFFER
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price / Person</p>
-                      <p className="text-2xl font-black text-brand-500 tracking-tighter">${tour.price}</p>
+                      {tour.offer && tour.offer.isActive && tour.offer.discountPercentage > 0 ? (
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs text-gray-400 line-through font-bold leading-none">${tour.price}</span>
+                          <p className="text-2xl font-black text-brand-500 tracking-tighter leading-tight">
+                            ${(tour.price * (1 - tour.offer.discountPercentage / 100)).toFixed(2)}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-2xl font-black text-brand-500 tracking-tighter">${tour.price}</p>
+                      )}
                     </div>
                     <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden lg:block"></div>
                     <div className="flex gap-2">
@@ -833,6 +882,40 @@ const Tours: React.FC = () => {
                   </div>
                 </div>
               </section>
+
+              {/* Offer Information Section */}
+              {selectedTourForDetails.offer && selectedTourForDetails.offer.isActive && selectedTourForDetails.offer.discountPercentage > 0 && (
+                <section className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-100 dark:border-red-900/30">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600">
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Active Percentage Offer</p>
+                        <h4 className="text-lg font-bold text-red-700 dark:text-red-400">{selectedTourForDetails.offer.discountPercentage}% Instant Discount</h4>
+                        <p className="text-sm text-red-600/70">Applied by Guide</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-8">
+                      <div className="text-center md:text-right">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Offer Period</p>
+                        <p className="text-sm font-bold text-red-700 dark:text-red-300">
+                          {new Date(selectedTourForDetails.offer.startDate!).toLocaleDateString()} - {new Date(selectedTourForDetails.offer.endDate!).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-center md:text-right">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Discounted Price</p>
+                        <p className="text-xl font-black text-red-700 dark:text-red-300 tracking-tighter">
+                          ${(selectedTourForDetails.price * (1 - selectedTourForDetails.offer.discountPercentage / 100)).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* Rich Content Sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

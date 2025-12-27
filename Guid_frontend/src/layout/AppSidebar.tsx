@@ -11,7 +11,6 @@ import {
   LockIcon,
   PieChartIcon,
   PlugInIcon,
-  ShootingStarIcon,
   UserCircleIcon,
   VideoIcon,
 } from "../icons";
@@ -43,6 +42,8 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Add Tour", path: "/tours/add", pro: false },
       { name: "All Tours", path: "/tours/manage", pro: false },
+      { name: "Add Offer", path: "/offers/add", pro: false },
+      { name: "Manage Offers", path: "/offers/manage", pro: false },
       { name: "Promote Tours", path: "/tours/promote", pro: false },
       { name: "Tour Calendar", path: "/tours/calendar", pro: false },
     ],
@@ -91,15 +92,6 @@ const navItems: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
-  {
-    icon: <ShootingStarIcon />,
-    name: "Offers & Promotions",
-    requiresApproval: true,
-    subItems: [
-      { name: "Add Offer", path: "/offers/add", pro: false },
-      { name: "Manage Offers", path: "/offers/manage", pro: false },
-    ],
-  },
   {
     icon: <BoxIcon />,
     name: "Destinations",

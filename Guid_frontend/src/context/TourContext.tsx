@@ -18,6 +18,12 @@ interface Tour {
   status: 'pending' | 'approved' | 'rejected';
   isActive: boolean;
   rejectionReason?: string;
+  offer?: {
+    discountPercentage: number;
+    startDate: string | null;
+    endDate: string | null;
+    isActive: boolean;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +35,7 @@ interface TourContextType {
   createTour: (tourData: FormData) => Promise<{ success: boolean; message: string; tour?: Tour }>;
   updateTour: (tourId: string, tourData: FormData) => Promise<{ success: boolean; message: string; tour?: Tour }>;
   deleteTour: (tourId: string) => Promise<{ success: boolean; message: string }>;
+  updateOffer: (tourId: string, offerData: any) => Promise<{ success: boolean; message: string }>;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -178,6 +185,32 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const updateOffer = useCallback(async (tourId: string, offerData: any): Promise<{ success: boolean; message: string }> => {
+    try {
+      const token = localStorage.getItem('guideToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/guide/tours/${tourId}/offer`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(offerData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        await refetchTours();
+        return { success: true, message: result.message };
+      } else {
+        return { success: false, message: result.message || 'Failed to update offer' };
+      }
+    } catch (error) {
+      console.error('Error updating offer:', error);
+      return { success: false, message: 'Error updating offer' };
+    }
+  }, [refetchTours]);
+
   useEffect(() => {
     fetchTours();
 
@@ -196,7 +229,8 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     createTour,
     updateTour,
     deleteTour,
-  }), [tours, loading, refetchTours, createTour, updateTour, deleteTour]);
+    updateOffer,
+  }), [tours, loading, refetchTours, createTour, updateTour, deleteTour, updateOffer]);
 
   return (
     <TourContext.Provider value={value}>

@@ -4,6 +4,7 @@ import {
   getMyTours,
   resubmitTour,
   updateTour,
+  updateTourOffer,
 } from '../../controllers/GuidController/tourController.js';
 
 import auth from '../../middleware/auth.js';
@@ -29,5 +30,8 @@ router.delete('/:tourId', deleteTour);
 
 // Resubmit a rejected tour
 router.put('/:tourId/resubmit', resubmitTour);
+
+// Update tour offer
+router.put('/:tourId/offer', updateTourOffer);
 
 export default router;

@@ -345,3 +345,29 @@ export const resubmitTour = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const updateTourOffer = async (req, res) => {
+  try {
+    const guideId = req.user.userId;
+    const { tourId } = req.params;
+    const { discountPercentage, startDate, endDate, isActive } = req.body;
+
+    if (!guideId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const tour = await Tour.findOne({ _id: tourId, guide: guideId });
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    tour.offer = {
+      discountPercentage: Number(discountPercentage) || 0,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      isActive: isActive !== undefined ? isActive : true
+    };
+
+    await tour.save();
+    res.json({ message: 'Offer updated successfully', tour });
+  } catch (error) {
+    console.error('Error updating tour offer:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

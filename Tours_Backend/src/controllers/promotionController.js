@@ -24,7 +24,24 @@ export const createPromotionType = async (req, res) => {
 export const getPromotionTypes = async (req, res) => {
     try {
         const promotionTypes = await PromotionType.find({ isActive: true });
-        res.json(promotionTypes);
+
+        // Calculate available slots for each type
+        const typesWithAvailability = await Promise.all(promotionTypes.map(async (type) => {
+            const activeCount = await PromotionRequest.countDocuments({
+                promotionType: type._id,
+                status: { $in: ['pending', 'approved'] },
+                $or: [
+                    { endDate: { $gt: new Date() } },
+                    { endDate: null } // Still taking a slot if pending
+                ]
+            });
+            return {
+                ...type.toObject(),
+                availableSlots: Math.max(0, type.slots - activeCount)
+            };
+        }));
+
+        res.json(typesWithAvailability);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -58,6 +75,20 @@ export const createPromotionRequest = async (req, res) => {
 
         const promotionType = await PromotionType.findById(promotionTypeId);
         if (!promotionType) return res.status(404).json({ message: 'Promotion type not found' });
+
+        // Check slot availability
+        const activeCount = await PromotionRequest.countDocuments({
+            promotionType: promotionTypeId,
+            status: { $in: ['pending', 'approved'] },
+            $or: [
+                { endDate: { $gt: new Date() } },
+                { endDate: null }
+            ]
+        });
+
+        if (activeCount >= promotionType.slots) {
+            return res.status(400).json({ message: 'No available slots for this promotion' });
+        }
 
         const totalCost = promotionType.dailyCost * duration;
 
@@ -124,37 +155,42 @@ export const getAdminPromotionRequests = async (req, res) => {
 export const updatePromotionRequestStatus = async (req, res) => {
     try {
         const { status, rejectionReason, startDate, endDate } = req.body;
-        const request = await PromotionRequest.findById(req.params.id).populate('guide').populate('tour');
-
-        if (!request) return res.status(404).json({ message: 'Request not found' });
-
-        request.status = status;
+        const updateData = { status };
         if (status === 'rejected') {
-            request.rejectionReason = rejectionReason;
+            updateData.rejectionReason = rejectionReason;
         } else if (status === 'approved') {
-            request.startDate = startDate;
-            request.endDate = endDate;
+            if (!startDate || !endDate) {
+                return res.status(400).json({ message: 'Start and end dates are required for approval' });
+            }
+            updateData.startDate = startDate;
+            updateData.endDate = endDate;
         }
 
-        await request.save();
+        const updatedRequest = await PromotionRequest.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true }
+        ).populate('guide').populate('tour');
+
+        if (!updatedRequest) return res.status(404).json({ message: 'Request not found' });
 
         // Send notification to Guide
         try {
             let mailOptions;
             if (status === 'approved') {
-                mailOptions = promotionRequestApprovedTemplate(request.guide.name, request.tour.title, startDate, endDate);
+                mailOptions = promotionRequestApprovedTemplate(updatedRequest.guide.name, updatedRequest.tour.title, startDate, endDate);
             } else {
-                mailOptions = promotionRequestRejectedTemplate(request.guide.name, request.tour.title, rejectionReason);
+                mailOptions = promotionRequestRejectedTemplate(updatedRequest.guide.name, updatedRequest.tour.title, rejectionReason);
             }
             await sendEmail({
-                to: request.guide.email,
+                to: updatedRequest.guide.email,
                 ...mailOptions
             });
         } catch (emailError) {
             console.error('Failed to send email to guide:', emailError);
         }
 
-        res.json(request);
+        res.json(updatedRequest);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

@@ -29,6 +29,8 @@ import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
 import PromoteTours from "./pages/Promotions/PromoteTours";
 import CreatePromotionRequest from "./pages/Promotions/CreatePromotionRequest";
+import AddOffer from "./pages/Offers/AddOffer";
+import ManageOffers from "./pages/Offers/ManageOffers";
 
 export default function App() {
   return (
@@ -71,8 +73,8 @@ export default function App() {
             <Route path="/blog/categories" element={<PlaceholderPage title="Blog Categories" description="Organize blog posts by categories and tags." />} />
 
             {/* Offers & Promotions */}
-            <Route path="/offers/add" element={<PlaceholderPage title="Add Offer" description="Create special discounts and promotional packages." />} />
-            <Route path="/offers/manage" element={<PlaceholderPage title="Manage Offers" description="Edit and remove expired offers." />} />
+            <Route path="/offers/add" element={<AddOffer />} />
+            <Route path="/offers/manage" element={<ManageOffers />} />
 
             {/* Destinations */}
             <Route path="/destinations/add" element={<PlaceholderPage title="Add Destination" description="Add new tour destinations and locations." />} />

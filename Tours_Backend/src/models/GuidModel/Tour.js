@@ -78,6 +78,26 @@ const TourSchema = new Schema(
       type: String,
       default: null,
     },
+    offer: {
+      discountPercentage: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0,
+      },
+      startDate: {
+        type: Date,
+        default: null,
+      },
+      endDate: {
+        type: Date,
+        default: null,
+      },
+      isActive: {
+        type: Boolean,
+        default: false,
+      }
+    }
   },
   {
     timestamps: true,

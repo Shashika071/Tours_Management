@@ -8,6 +8,7 @@ interface PromotionType {
     name: string;
     dailyCost: number;
     description: string;
+    availableSlots?: number;
 }
 
 const CreatePromotionRequest: React.FC = () => {
@@ -130,27 +131,43 @@ const CreatePromotionRequest: React.FC = () => {
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wider">Step 2: Choose Promotion Plan</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {promoTypes.map(type => (
-                                    <div
-                                        key={type._id}
-                                        onClick={() => setSelectedType(type._id)}
-                                        className={`cursor-pointer p-5 border-2 rounded-xl transition-all relative overflow-hidden ${selectedType === type._id ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10' : 'border-gray-100 dark:border-gray-700 hover:border-brand-200 dark:hover:border-brand-800'}`}
-                                    >
-                                        {selectedType === type._id && (
-                                            <div className="absolute top-2 right-2 text-brand-500">
-                                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                </svg>
+                                {promoTypes.map(type => {
+                                    const isSoldOut = type.availableSlots !== undefined && type.availableSlots <= 0;
+                                    return (
+                                        <div
+                                            key={type._id}
+                                            onClick={() => !isSoldOut && setSelectedType(type._id)}
+                                            className={`p-5 border-2 rounded-xl transition-all relative overflow-hidden 
+                                                ${isSoldOut ? 'opacity-60 grayscale cursor-not-allowed bg-gray-50 border-gray-200' : 'cursor-pointer'}
+                                                ${selectedType === type._id ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10' : 'border-gray-100 dark:border-gray-700 hover:border-brand-200 dark:hover:border-brand-800'}`}
+                                        >
+                                            {selectedType === type._id && (
+                                                <div className="absolute top-2 right-2 text-brand-500">
+                                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                            {isSoldOut && (
+                                                <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                                    Sold Out
+                                                </div>
+                                            )}
+                                            <h3 className="font-bold text-lg text-gray-900 dark:text-white">{type.name}</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">{type.description}</p>
+
+                                            <div className="mt-4 flex items-center justify-between">
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-2xl font-black text-brand-600">${type.dailyCost}</span>
+                                                    <span className="text-xs text-gray-500 uppercase font-bold">/ day</span>
+                                                </div>
+                                                <div className={`text-xs font-bold px-2 py-1 rounded-md ${isSoldOut ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                    {isSoldOut ? 'No Slots' : `${type.availableSlots ?? 0} Slots Available`}
+                                                </div>
                                             </div>
-                                        )}
-                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">{type.name}</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">{type.description}</p>
-                                        <div className="mt-4 flex items-baseline gap-1">
-                                            <span className="text-2xl font-black text-brand-600">${type.dailyCost}</span>
-                                            <span className="text-xs text-gray-500 uppercase font-bold">/ day</span>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {promoTypes.length === 0 && (
                                     <p className="text-center py-4 text-gray-500">Loading promotion plans...</p>
                                 )}
