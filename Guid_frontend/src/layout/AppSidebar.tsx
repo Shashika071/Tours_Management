@@ -4,6 +4,7 @@ import {
   ChatIcon,
   ChevronDownIcon,
   DocsIcon,
+  DollarLineIcon,
   GridIcon,
   GroupIcon,
   HorizontaLDots,
@@ -49,7 +50,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <GridIcon />,
+    icon: <DollarLineIcon />,
     name: "Bid Tours",
     requiresApproval: true,
     subItems: [
