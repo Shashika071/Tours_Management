@@ -42,6 +42,8 @@ interface TourContextType {
   updateTour: (tourId: string, tourData: FormData) => Promise<{ success: boolean; message: string; tour?: Tour }>;
   deleteTour: (tourId: string) => Promise<{ success: boolean; message: string }>;
   updateOffer: (tourId: string, offerData: any) => Promise<{ success: boolean; message: string }>;
+  pausePolling: () => void;
+  resumePolling: () => void;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -61,6 +63,7 @@ interface TourProviderProps {
 export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pausePollingState, setPausePollingState] = useState(false);
 
   const fetchTours = useCallback(async () => {
     try {
@@ -95,6 +98,14 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     await fetchTours();
   }, [fetchTours]);
 
+  const pausePolling = useCallback(() => {
+    setPausePollingState(true);
+  }, []);
+
+  const resumePolling = useCallback(() => {
+    setPausePollingState(false);
+  }, []);
+
   // Polling for real-time updates
   useEffect(() => {
     const token = localStorage.getItem('guideToken');
@@ -103,13 +114,15 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     // Initial fetch
     fetchTours();
 
-    // Poll every 5 seconds for real-time updates
+    // Poll every 5 seconds for real-time updates, but only if not paused
     const interval = setInterval(() => {
-      fetchTours();
+      if (!pausePollingState) {
+        fetchTours();
+      }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchTours]);
+  }, [fetchTours, pausePollingState]);
 
   const createTour = useCallback(async (tourData: FormData): Promise<{ success: boolean; message: string; tour?: Tour }> => {
     console.log('Starting tour creation...');
@@ -245,7 +258,9 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     updateTour,
     deleteTour,
     updateOffer,
-  }), [tours, loading, refetchTours, createTour, updateTour, deleteTour, updateOffer]);
+    pausePolling,
+    resumePolling,
+  }), [tours, loading, refetchTours, createTour, updateTour, deleteTour, updateOffer, pausePolling, resumePolling]);
 
   return (
     <TourContext.Provider value={value}>

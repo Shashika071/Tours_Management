@@ -106,6 +106,7 @@ const DestinationByMood = () => {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(9); // Default to 9 for "Explore All Tours"
 
   useEffect(() => {
     const fetchTours = async () => {
@@ -144,6 +145,17 @@ const DestinationByMood = () => {
     return tours.filter(tour => tour.category === selectedCategory.id);
   }, [tours, selectedCategory]);
 
+  // Determine max visible tours based on selection
+  const maxVisible = selectedCategory ? 6 : 9;
+
+  // Get visible tours
+  const visibleTours = useMemo(() => {
+    return filteredTours.slice(0, visibleCount);
+  }, [filteredTours, visibleCount]);
+
+  // Check if there are more tours to show
+  const hasMore = filteredTours.length > visibleCount;
+
   return (
     <section id="destinations" className="py-20 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
       <div
@@ -152,6 +164,7 @@ const DestinationByMood = () => {
           // Clear selection when clicking on blank space in the main container
           if (selectedCategory && (e.target === e.currentTarget || e.target.classList.contains('bg-gradient-to-br'))) {
             setSelectedCategory(null);
+            setVisibleCount(9);
           }
         }}
       >
@@ -191,7 +204,10 @@ const DestinationByMood = () => {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 whileHover={{ scale: isActive ? 1 : 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setVisibleCount(category ? 6 : 9);
+                }}
                 className={`relative group flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 flex-shrink-0 w-24 sm:w-28 ${
                   isActive
                     ? `bg-gradient-to-br ${category.color} text-white shadow-2xl ring-4 ring-white`
@@ -230,7 +246,10 @@ const DestinationByMood = () => {
               </h2>
               {selectedCategory && (
                 <button
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setVisibleCount(9);
+                  }}
                   className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 rounded-full hover:bg-gray-100"
                   title="Clear selection (Backspace)"
                 >
@@ -262,7 +281,7 @@ const DestinationByMood = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredTours.map((tour, index) => (
+              {visibleTours.map((tour, index) => (
                 <motion.div
                   key={tour._id}
                   initial={{ opacity: 0, y: 20 }}
@@ -320,6 +339,11 @@ const DestinationByMood = () => {
                   </div>
                 </motion.div>
               ))}
+            </div>
+          )}
+          {hasMore && (
+            <div className="text-center mt-8">
+              <button onClick={() => setVisibleCount(visibleCount + (selectedCategory ? 6 : 9))} className="bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold">See More Tours</button>
             </div>
           )}
         </motion.div>

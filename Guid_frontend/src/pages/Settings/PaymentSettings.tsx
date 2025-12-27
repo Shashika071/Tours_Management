@@ -12,13 +12,19 @@ interface PaymentSettingsData {
 }
 
 const PaymentSettings: React.FC = () => {
-  const { guide, refetchProfile } = useProfile();
+  const { guide, refetchProfile, pausePolling, resumePolling } = useProfile();
   const [formData, setFormData] = useState<PaymentSettingsData>({
     preferredPaymentMethod: '',
     bankAccountNumber: '',
     taxId: '',
   });
   const [loading, setLoading] = useState(false);
+
+  // Pause polling while on this page
+  useEffect(() => {
+    pausePolling();
+    return () => resumePolling();
+  }, [pausePolling, resumePolling]);
 
   useEffect(() => {
     if (guide) {

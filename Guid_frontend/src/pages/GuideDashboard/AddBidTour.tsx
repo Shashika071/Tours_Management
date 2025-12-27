@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Button from '../../components/ui/button/Button';
 import ComponentCard from '../../components/common/ComponentCard';
@@ -30,7 +30,7 @@ interface BidTourFormData {
 
 const AddBidTour: React.FC = () => {
     const navigate = useNavigate();
-    const { createTour } = useTour();
+    const { createTour, pausePolling, resumePolling } = useTour();
     const [loading, setLoading] = useState(false);
     const [images, setImages] = useState<File[]>([]);
 
@@ -66,6 +66,12 @@ const AddBidTour: React.FC = () => {
         difficulty: 'Moderate',
         category: 'Other',
     });
+
+    // Pause polling while editing the form
+    useEffect(() => {
+        pausePolling();
+        return () => resumePolling();
+    }, [pausePolling, resumePolling]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

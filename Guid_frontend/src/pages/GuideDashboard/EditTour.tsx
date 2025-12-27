@@ -30,7 +30,7 @@ interface TourFormData {
 const EditTour: React.FC = () => {
   const { tourId } = useParams<{ tourId: string }>();
   const navigate = useNavigate();
-  const { updateTour } = useTour();
+  const { updateTour, pausePolling, resumePolling } = useTour();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [images, setImages] = useState<File[]>([]);
@@ -66,6 +66,12 @@ const EditTour: React.FC = () => {
     difficulty: 'Moderate',
     category: 'Other',
   });
+
+  // Pause polling while editing the form
+  useEffect(() => {
+    pausePolling();
+    return () => resumePolling();
+  }, [pausePolling, resumePolling]);
 
   useEffect(() => {
     const fetchTour = async () => {

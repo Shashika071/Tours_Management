@@ -22,7 +22,7 @@ interface GeneralSettingsData {
 }
 
 const GeneralSettings: React.FC = () => {
-  const { guide, refetchProfile } = useProfile();
+  const { guide, refetchProfile, pausePolling, resumePolling } = useProfile();
   const [formData, setFormData] = useState<GeneralSettingsData>({
     dateOfBirth: '',
     country: '',
@@ -39,6 +39,12 @@ const GeneralSettings: React.FC = () => {
   const [idBack, setIdBack] = useState<File | null>(null);
   const [certificate, setCertificate] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Pause polling while on this page
+  useEffect(() => {
+    pausePolling();
+    return () => resumePolling();
+  }, [pausePolling, resumePolling]);
 
   useEffect(() => {
     if (guide) {

@@ -36,6 +36,8 @@ interface ProfileContextType {
   guide: Guide | null;
   loading: boolean;
   refetchProfile: () => Promise<void>;
+  pausePolling: () => void;
+  resumePolling: () => void;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -55,6 +57,7 @@ interface ProfileProviderProps {
 export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
   const [guide, setGuide] = useState<Guide | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pausePollingState, setPausePollingState] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -89,22 +92,34 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     await fetchProfile();
   }, [fetchProfile]);
 
+  const pausePolling = useCallback(() => {
+    setPausePollingState(true);
+  }, []);
+
+  const resumePolling = useCallback(() => {
+    setPausePollingState(false);
+  }, []);
+
   useEffect(() => {
     fetchProfile();
 
-    // Set up polling for real-time updates (every 60 seconds)
+    // Set up polling for real-time updates (every 60 seconds), but only if not paused
     const pollInterval = setInterval(() => {
-      fetchProfile();
+      if (!pausePollingState) {
+        fetchProfile();
+      }
     }, 60000);
 
     return () => clearInterval(pollInterval);
-  }, [fetchProfile]);
+  }, [fetchProfile, pausePollingState]);
 
   const value = useMemo(() => ({
     guide,
     loading,
     refetchProfile,
-  }), [guide, loading, refetchProfile]);
+    pausePolling,
+    resumePolling,
+  }), [guide, loading, refetchProfile, pausePolling, resumePolling]);
 
   return (
     <ProfileContext.Provider value={value}>

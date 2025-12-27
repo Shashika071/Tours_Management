@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
+import Avatar from "../common/Avatar";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { Modal } from "../ui/modal";
 import { useModal } from "../../hooks/useModal";
 import { useProfile } from "../../context/ProfileContext";
-import Avatar from "../common/Avatar";
 
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const { guide, loading, refetchProfile } = useProfile();
+  const { guide, loading, refetchProfile, pausePolling, resumePolling } = useProfile();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -30,6 +30,16 @@ export default function UserMetaCard() {
       setPreviewImage(guide.profileImage ? `${import.meta.env.VITE_API_URL}${guide.profileImage}?t=${new Date().getTime()}` : '');
     }
   }, [guide]);
+
+  // Pause polling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      pausePolling();
+    } else {
+      resumePolling();
+    }
+    return () => resumePolling();
+  }, [isOpen, pausePolling, resumePolling]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

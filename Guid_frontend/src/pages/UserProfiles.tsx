@@ -1,11 +1,20 @@
+import DeleteAccountCard from "../components/UserProfile/DeleteAccountCard";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import PageMeta from "../components/common/PageMeta";
 import UserAddressCard from "../components/UserProfile/UserAddressCard";
-import DeleteAccountCard from "../components/UserProfile/DeleteAccountCard";
 import UserInfoCard from "../components/UserProfile/UserInfoCard";
 import UserMetaCard from "../components/UserProfile/UserMetaCard";
+import { useEffect } from "react";
+import { useProfile } from "../context/ProfileContext";
 
 export default function UserProfiles() {
+  const { pausePolling, resumePolling } = useProfile();
+
+  // Pause polling while on this page
+  useEffect(() => {
+    pausePolling();
+    return () => resumePolling();
+  }, [pausePolling, resumePolling]);
   return (
     <>
       <PageMeta
