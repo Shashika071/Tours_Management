@@ -215,7 +215,7 @@ export default function ResetPassword() {
                 <div className="text-sm text-green-500">{message}</div>
               )}
               <div>
-                <Button className="w-full" size="sm" disabled={loading}>
+                <Button className="w-full" size="sm" disabled={loading} type="submit">
                   {loading ? "Resetting..." : "Reset Password"}
                 </Button>
               </div>

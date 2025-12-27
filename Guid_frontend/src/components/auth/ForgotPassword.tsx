@@ -81,7 +81,7 @@ export default function ForgotPassword() {
                 <div className="text-sm text-green-500">{message}</div>
               )}
               <div>
-                <Button className="w-full" size="sm" disabled={loading}>
+                <Button className="w-full" size="sm" disabled={loading} type="submit">
                   {loading ? "Sending..." : "Send Reset Link"}
                 </Button>
               </div>
