@@ -1,4 +1,4 @@
-import { FaArrowLeft, FaCalendarAlt, FaClock, FaGavel, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock, FaGavel, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
 import { Link, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
@@ -15,6 +15,7 @@ const TourDetail = () => {
   const [bidAmount, setBidAmount] = useState('');
   const [bidding, setBidding] = useState(false);
   const [bidMessage, setBidMessage] = useState('');
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -69,6 +70,22 @@ const TourDetail = () => {
     }
   };
 
+  const nextImage = () => {
+    if (tour?.images?.length > 1) {
+      setSelectedImageIndex((prev) => (prev + 1) % tour.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (tour?.images?.length > 1) {
+      setSelectedImageIndex((prev) => (prev - 1 + tour.images.length) % tour.images.length);
+    }
+  };
+
+  const selectImage = (index) => {
+    setSelectedImageIndex(index);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-32 pb-20 flex items-center justify-center">
@@ -118,34 +135,74 @@ const TourDetail = () => {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
+            className="space-y-4"
           >
-            <div className="space-y-4">
-              <div className="relative">
+            {/* Main Image */}
+            <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="relative aspect-square">
                 <img
-                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${tour.images?.[0]}`}
+                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${tour.images?.[selectedImageIndex] || tour.images?.[0]}`}
                   alt={tour.title}
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
+                  className="w-full h-full object-cover"
                 />
+
+                {/* Navigation Arrows */}
+                {tour.images?.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                    >
+                      <FaChevronLeft />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                    >
+                      <FaChevronRight />
+                    </button>
+                  </>
+                )}
+
+                {/* Tour Type Badge */}
                 {tour.tourType === 'bid' && (
                   <div className="absolute top-4 left-4 bg-amber-500 text-white px-4 py-2 rounded-full font-semibold text-sm flex items-center gap-2">
                     <FaGavel />
                     BID TOUR
                   </div>
                 )}
+
+                {/* Image Counter */}
+                {tour.images?.length > 1 && (
+                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                    {selectedImageIndex + 1} / {tour.images.length}
+                  </div>
+                )}
               </div>
-              {tour.images?.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {tour.images.slice(1, 5).map((image, index) => (
-                    <img
-                      key={index}
-                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${image}`}
-                      alt={`${tour.title} ${index + 2}`}
-                      className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                    />
-                  ))}
-                </div>
-              )}
             </div>
+
+            {/* Thumbnail Gallery */}
+            {tour.images?.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {tour.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectImage(index)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index
+                        ? 'border-primary shadow-lg scale-105'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${image}`}
+                      alt={`${tour.title} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Tour Details */}

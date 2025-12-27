@@ -1,13 +1,14 @@
+import {
+    promotionRequestApprovedTemplate,
+    promotionRequestRejectedTemplate,
+    promotionRequestSubmittedTemplate
+} from '../utils/emailTemplates.js';
+
+import Guide from '../models/GuidModel/Guide.js';
 import PromotionRequest from '../models/GuidModel/PromotionRequest.js';
 import PromotionType from '../models/AdminModel/PromotionType.js';
 import Tour from '../models/GuidModel/Tour.js';
-import Guide from '../models/GuidModel/Guide.js';
 import { sendEmail } from '../utils/emailserver.js';
-import {
-    promotionRequestSubmittedTemplate,
-    promotionRequestApprovedTemplate,
-    promotionRequestRejectedTemplate
-} from '../utils/emailTemplates.js';
 
 // --- Promotion Type CRUD (Admin) ---
 
@@ -193,5 +194,147 @@ export const updatePromotionRequestStatus = async (req, res) => {
         res.json(updatedRequest);
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+};
+
+// Get tours with active promotions for public viewing
+export const getToursWithPromotion = async (req, res) => {
+    try {
+        const { promotionType } = req.params;
+
+        // Find the promotion type
+        const promoType = await PromotionType.findOne({ name: promotionType, isActive: true });
+        if (!promoType) {
+            return res.status(404).json({ message: 'Promotion type not found' });
+        }
+
+        // Find active promotion requests for this type
+        const activePromotions = await PromotionRequest.find({
+            promotionType: promoType._id,
+            status: 'approved',
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+        }).populate('tour');
+
+        // Filter tours that are approved and active
+        const tours = activePromotions
+            .map(promo => promo.tour)
+            .filter(tour => tour && tour.status === 'approved' && tour.isActive)
+            .map(tour => ({
+                ...tour.toObject(),
+                promotionType: promotionType
+            }));
+
+        res.json({ tours });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get featured tours (assuming "Featured Promo" is the name)
+export const getFeaturedTours = async (req, res) => {
+    try {
+        const promoType = await PromotionType.findOne({ name: 'Featured Promo', isActive: true });
+        if (!promoType) {
+            return res.json({ tours: [] }); // Return empty if no such promotion
+        }
+
+        const activePromotions = await PromotionRequest.find({
+            promotionType: promoType._id,
+            status: 'approved',
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+        }).populate('tour').populate('guide', 'name profileImage');
+
+        const tours = activePromotions
+            .map(promo => promo.tour)
+            .filter(tour => tour && tour.status === 'approved' && tour.isActive);
+
+        res.json({ tours });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get top tours (assuming "Top Tours Promo" is the name)
+export const getTopTours = async (req, res) => {
+    try {
+        const promoType = await PromotionType.findOne({ name: 'Top Tours Promo', isActive: true });
+        if (!promoType) {
+            return res.json({ tours: [] });
+        }
+
+        const activePromotions = await PromotionRequest.find({
+            promotionType: promoType._id,
+            status: 'approved',
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+        }).populate('tour').populate('guide', 'name profileImage');
+
+        const tours = activePromotions
+            .map(promo => promo.tour)
+            .filter(tour => tour && tour.status === 'approved' && tour.isActive);
+
+        res.json({ tours });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get top 20 tours (assuming "All Tours Top 20" is the name)
+export const getTop20Tours = async (req, res) => {
+    try {
+        const promoType = await PromotionType.findOne({ name: 'All Tours Top 20', isActive: true });
+        if (!promoType) {
+            return res.json({ tours: [] });
+        }
+
+        const activePromotions = await PromotionRequest.find({
+            promotionType: promoType._id,
+            status: 'approved',
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+        }).populate('tour').populate('guide', 'name profileImage');
+
+        const tours = activePromotions
+            .map(promo => promo.tour)
+            .filter(tour => tour && tour.status === 'approved' && tour.isActive)
+            .slice(0, 20); // Limit to 20
+
+        res.json({ tours });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get bid tours (tours with tourType: 'bid')
+export const getBidTours = async (req, res) => {
+    try {
+        const tours = await Tour.find({
+            status: 'approved',
+            isActive: true,
+            tourType: 'bid'
+        }).populate('guide', 'name profileImage');
+
+        res.json({ tours });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get special offers (tours with active offers)
+export const getSpecialOffers = async (req, res) => {
+    try {
+        const tours = await Tour.find({
+            status: 'approved',
+            isActive: true,
+            'offer.isActive': true,
+            'offer.startDate': { $lte: new Date() },
+            'offer.endDate': { $gte: new Date() }
+        }).populate('guide', 'name profileImage');
+
+        res.json({ tours });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

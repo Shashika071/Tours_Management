@@ -1,4 +1,5 @@
 import About from '../components/About';
+import BidTours from '../components/BidTours';
 import DestinationByMood from '../components/DestinationByMood';
 import FeaturedPackages from '../components/FeaturedPackages';
 import Hero from '../components/Hero';
@@ -13,6 +14,7 @@ const Home = () => {
       <Hero />
       <FeaturedPackages />
       <TopTours />
+      <BidTours />
       <DestinationByMood />
       <SpecialOffers />
       <WhyChooseUs />

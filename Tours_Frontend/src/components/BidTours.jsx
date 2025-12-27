@@ -4,37 +4,37 @@ import { Link } from 'react-router-dom';
 import TourCard from './TourCard';
 import api from '../utils/api';
 
-const TopTours = () => {
+const BidTours = () => {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchTopTours = async () => {
+    const fetchBidTours = async () => {
       try {
-        const response = await api.get('/tours/top-tours');
+        const response = await api.get('/tours/bid-tours');
         setTours(response.data.tours);
       } catch (err) {
-        console.error('Error fetching top tours:', err);
-        setError('Failed to load top tours');
+        console.error('Error fetching bid tours:', err);
+        setError('Failed to load bid tours');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTopTours();
+    fetchBidTours();
   }, []);
 
   if (loading) {
     return (
-      <section id="tours" className="py-20 bg-gray-50">
+      <section id="bid-tours" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              Sri Lanka's Top Tours
+              Bid Tours
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Loading top tours...
+              Loading bid tours...
             </p>
           </div>
         </div>
@@ -44,14 +44,14 @@ const TopTours = () => {
 
   if (error || tours.length === 0) {
     return (
-      <section id="tours" className="py-20 bg-gray-50">
+      <section id="bid-tours" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              Sri Lanka's Top Tours
+              Bid Tours
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {error || 'No top tours available at the moment.'}
+              {error || 'No bid tours available at the moment.'}
             </p>
           </div>
         </div>
@@ -60,14 +60,14 @@ const TopTours = () => {
   }
 
   return (
-    <section id="tours" className="py-20 bg-gray-50">
+    <section id="bid-tours" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-            Sri Lanka's Top Tours
+            Bid Tours
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover the most popular destinations and experiences across the beautiful island of Sri Lanka
+            Place your bid on exclusive tour packages and get amazing deals on unique experiences
           </p>
         </div>
 
@@ -79,7 +79,7 @@ const TopTours = () => {
 
         <div className="text-center mt-12">
           <Link to="/all-tours" className="btn-primary inline-block">
-            See More Tours
+            View All Tours
           </Link>
         </div>
       </div>
@@ -87,4 +87,4 @@ const TopTours = () => {
   );
 };
 
-export default TopTours;
+export default BidTours;

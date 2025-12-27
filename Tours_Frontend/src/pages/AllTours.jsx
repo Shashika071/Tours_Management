@@ -14,7 +14,31 @@ const AllTours = () => {
     const fetchTours = async () => {
       try {
         const response = await api.get('/tours/approved');
-        setTours(response.data.tours);
+        let tours = response.data.tours;
+
+        // Fetch top 20 promoted tours
+        try {
+          const top20Response = await api.get('/tours/top-20');
+          const top20Tours = top20Response.data.tours;
+
+          // Create a set of top 20 tour IDs for quick lookup
+          const top20Ids = new Set(top20Tours.map(tour => tour._id));
+
+          // Sort tours: top 20 promoted tours first, then others
+          tours = tours.sort((a, b) => {
+            const aIsTop20 = top20Ids.has(a._id);
+            const bIsTop20 = top20Ids.has(b._id);
+
+            if (aIsTop20 && !bIsTop20) return -1;
+            if (!aIsTop20 && bIsTop20) return 1;
+            return 0; // Maintain original order for non-promoted tours
+          });
+        } catch (top20Error) {
+          console.error('Error fetching top 20 tours:', top20Error);
+          // Continue with regular tours if top 20 fetch fails
+        }
+
+        setTours(tours);
       } catch (err) {
         console.error('Error fetching tours:', err);
         setError('Failed to load tours');
@@ -51,30 +75,12 @@ const AllTours = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-4">
-            Sri Lanka Tours & Destinations
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Discover our complete collection of amazing Sri Lankan tours and destinations from Colombo to the ancient cities
-          </p>
-          <Link to="/" className="btn-outline inline-block">
-            ← Back to Home
-          </Link>
-        </motion.div>
-
         {/* Tours Grid */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
         >
           {tours.map((tour, index) => (
             <motion.div

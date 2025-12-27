@@ -1,3 +1,11 @@
+import {
+    getBidTours,
+    getFeaturedTours,
+    getSpecialOffers,
+    getTop20Tours,
+    getTopTours
+} from '../../controllers/promotionController.js';
+
 import Tour from '../../models/GuidModel/Tour.js';
 import auth from '../../middleware/auth.js';
 import express from 'express';
@@ -16,6 +24,21 @@ router.get('/approved', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Get featured tours
+router.get('/featured', getFeaturedTours);
+
+// Get top tours
+router.get('/top-tours', getTopTours);
+
+// Get top 20 tours
+router.get('/top-20', getTop20Tours);
+
+// Get special offers
+router.get('/special-offers', getSpecialOffers);
+
+// Get bid tours
+router.get('/bid-tours', getBidTours);
 
 // Get a specific tour by ID
 router.get('/:tourId', async (req, res) => {
