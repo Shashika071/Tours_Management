@@ -2,6 +2,8 @@ import {
   createTour,
   deleteTour,
   getMyTours,
+  requestDeletePermission,
+  requestEditPermission,
   resubmitTour,
   updateTour,
   updateTourOffer,
@@ -31,7 +33,10 @@ router.delete('/:tourId', deleteTour);
 // Resubmit a rejected tour
 router.put('/:tourId/resubmit', resubmitTour);
 
-// Update tour offer
-router.put('/:tourId/offer', updateTourOffer);
+// Request edit permission for approved tour
+router.post('/:tourId/request-edit', requestEditPermission);
+
+// Request delete permission for approved tour
+router.post('/:tourId/request-delete', requestDeletePermission);
 
 export default router;

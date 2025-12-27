@@ -163,7 +163,16 @@ export const updateTour = async (req, res) => {
     const tour = await Tour.findOne({ _id: tourId, guide: guideId });
     if (!tour) return res.status(404).json({ message: 'Tour not found' });
 
-    const updateData = processTourUpdateData(req, tour);
+    console.log('Update tour req.body:', req.body);
+    console.log('Tour bidDetails:', tour.bidDetails);
+
+    let updateData;
+    try {
+      updateData = processTourUpdateData(req, tour);
+    } catch (validationError) {
+      console.log('Validation error:', validationError.message);
+      return res.status(400).json({ message: validationError.message });
+    }
 
     const updatedTour = await Tour.findByIdAndUpdate(tourId, updateData, { new: true });
     if (!updatedTour) return res.status(404).json({ message: 'Tour not found' });
@@ -290,12 +299,49 @@ const updateBasicFields = (updateData, fields, tour) => {
     if (fields.startingPrice !== undefined && fields.startingPrice !== '') {
       // Prevent changing startingPrice for approved bid tours
       if (!(tour.status === 'approved' && tour.tourType === 'bid')) {
-        updateData.bidDetails.startingPrice = Number(fields.startingPrice);
+        const newStartingPrice = Number(fields.startingPrice);
+        const currentStartingPrice = tour.bidDetails?.startingPrice;
+        const isChanging = currentStartingPrice === undefined || newStartingPrice !== currentStartingPrice;
+        if (isChanging) {
+          if (isNaN(newStartingPrice) || newStartingPrice <= 0) {
+            throw new Error('Invalid starting price');
+          }
+        }
+        updateData.bidDetails.startingPrice = newStartingPrice;
+        // Update the price field to match startingPrice for bid tours
+        updateData.price = newStartingPrice;
+        // Ensure currentHighestBid is set
+        if (!updateData.bidDetails.currentHighestBid) {
+          updateData.bidDetails.currentHighestBid = newStartingPrice;
+        }
       }
     }
 
     if (fields.bidEndDate !== undefined && fields.bidEndDate !== '') {
-      updateData.bidDetails.bidEndDate = new Date(fields.bidEndDate);
+      const bidEndDate = new Date(fields.bidEndDate);
+      if (!isNaN(bidEndDate.getTime())) {
+        // Check if it's different from current bid end date
+        const currentBidEndDate = tour.bidDetails?.bidEndDate;
+        let isChanging = true;
+        if (currentBidEndDate) {
+          const currentDateStr = currentBidEndDate.toISOString().split('T')[0];
+          const newDateStr = fields.bidEndDate;
+          isChanging = currentDateStr !== newDateStr;
+        }
+        if (isChanging && bidEndDate <= new Date()) {
+          throw new Error('Invalid or past bid end date');
+        }
+        updateData.bidDetails.bidEndDate = bidEndDate;
+      } else {
+        throw new Error('Invalid bid end date');
+      }
+    }
+    // Ensure bidDetails has all required fields
+    if (!updateData.bidDetails.bidEndDate && tour.bidDetails?.bidEndDate) {
+      updateData.bidDetails.bidEndDate = tour.bidDetails.bidEndDate;
+    }
+    if (!updateData.bidDetails.currentHighestBid && tour.bidDetails?.currentHighestBid) {
+      updateData.bidDetails.currentHighestBid = tour.bidDetails.currentHighestBid;
     }
   }
 };
@@ -431,6 +477,106 @@ export const updateTourOffer = async (req, res) => {
     res.json({ message: 'Offer updated successfully', tour });
   } catch (error) {
     console.error('Error updating tour offer:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const requestEditPermission = async (req, res) => {
+  try {
+    const guideId = req.user.userId || req.user.id;
+    const { tourId } = req.params;
+
+    if (!guideId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const tour = await Tour.findOne({ _id: tourId, guide: guideId });
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    if (tour.status !== 'approved') {
+      return res.status(400).json({ message: 'Can only request edit permission for approved tours' });
+    }
+
+    // Update tour status to edit_requested
+    tour.status = 'edit_requested';
+    await tour.save();
+
+    // Send notification email to admin
+    try {
+      const mailOptions = {
+        to: process.env.MANAGER_EMAIL,
+        subject: 'Tour Edit Permission Request',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #ffc107;">Tour Edit Permission Request</h2>
+            <p>A guide has requested permission to edit an approved tour.</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #495057;">Tour Details:</h3>
+              <p><strong>Title:</strong> ${tour.title}</p>
+              <p><strong>Location:</strong> ${tour.location}</p>
+              <p><strong>Guide:</strong> ${req.user.name || 'Guide'}</p>
+              <p><strong>Tour Type:</strong> ${tour.tourType === 'bid' ? 'Bid Tour' : 'Standard Tour'}</p>
+            </div>
+            <p>Please review and approve or deny the edit request at: <a href="${process.env.ADMIN_FRONTEND_URL}/tours">${process.env.ADMIN_FRONTEND_URL}/tours</a></p>
+            <p>Best regards,<br>Tours Management System</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send edit permission request email:', emailError);
+    }
+
+    res.json({ message: 'Edit permission request sent to manager' });
+  } catch (error) {
+    console.error('Error requesting edit permission:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const requestDeletePermission = async (req, res) => {
+  try {
+    const guideId = req.user.userId || req.user.id;
+    const { tourId } = req.params;
+
+    if (!guideId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const tour = await Tour.findOne({ _id: tourId, guide: guideId });
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    if (tour.status !== 'approved') {
+      return res.status(400).json({ message: 'Can only request delete permission for approved tours' });
+    }
+
+    // Send notification email to admin
+    try {
+      const mailOptions = {
+        to: process.env.MANAGER_EMAIL,
+        subject: 'Tour Delete Permission Request',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Tour Delete Permission Request</h2>
+            <p>A guide has requested permission to delete an approved tour.</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #495057;">Tour Details:</h3>
+              <p><strong>Title:</strong> ${tour.title}</p>
+              <p><strong>Location:</strong> ${tour.location}</p>
+              <p><strong>Guide:</strong> ${req.user.name || 'Guide'}</p>
+              <p><strong>Tour Type:</strong> ${tour.tourType === 'bid' ? 'Bid Tour' : 'Standard Tour'}</p>
+            </div>
+            <p>Please review and approve or deny the delete request at: <a href="${process.env.ADMIN_FRONTEND_URL}/tours">${process.env.ADMIN_FRONTEND_URL}/tours</a></p>
+            <p>Best regards,<br>Tours Management System</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send delete permission request email:', emailError);
+    }
+
+    res.json({ message: 'Delete permission request sent to manager' });
+  } catch (error) {
+    console.error('Error requesting delete permission:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

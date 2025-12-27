@@ -16,7 +16,7 @@ interface Tour {
   difficulty: string;
   category: string;
   images: string[];
-  status: 'pending' | 'approved' | 'rejected' | 'pending_deletion';
+  status: 'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'edit_requested';
   guide: {
     _id: string;
     name: string;
@@ -46,9 +46,11 @@ const Tours: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectingDeletionTour, setRejectingDeletionTour] = useState<string | null>(null);
   const [deletionRejectionReason, setDeletionRejectionReason] = useState('');
+  const [rejectingEditTour, setRejectingEditTour] = useState<string | null>(null);
+  const [editRejectionReason, setEditRejectionReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'pending_deletion' | 'edit_requested' | 'all'>('all');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedTourForDetails, setSelectedTourForDetails] = useState<Tour | null>(null);
   const [tourCounts, setTourCounts] = useState({
@@ -56,6 +58,7 @@ const Tours: React.FC = () => {
     approved: 0,
     rejected: 0,
     pending_deletion: 0,
+    edit_requested: 0,
     all: 0
   });
 
@@ -78,7 +81,8 @@ const Tours: React.FC = () => {
           'pending': 'pending',
           'approved': 'approved',
           'rejected': 'rejected',
-          'pending_deletion': 'pending-deletion'
+          'pending_deletion': 'pending-deletion',
+          'edit_requested': 'edit-requested'
         };
         endpoint = endpointMap[activeTab] || activeTab;
       }
@@ -108,12 +112,13 @@ const Tours: React.FC = () => {
   const fetchTourCounts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const endpoints = ['pending', 'approved', 'rejected', 'pending-deletion', 'all'];
+      const endpoints = ['pending', 'approved', 'rejected', 'pending-deletion', 'edit-requested', 'all'];
       const counts = {
         pending: 0,
         approved: 0,
         rejected: 0,
         pending_deletion: 0,
+        edit_requested: 0,
         all: 0
       };
 
@@ -131,7 +136,8 @@ const Tours: React.FC = () => {
             'pending': 'pending',
             'approved': 'approved',
             'rejected': 'rejected',
-            'pending-deletion': 'pending_deletion'
+            'pending-deletion': 'pending_deletion',
+            'edit-requested': 'edit_requested'
           };
           const stateKey = stateKeyMap[endpoint] || endpoint;
           counts[stateKey as keyof typeof counts] = data.tours.length;
@@ -145,7 +151,18 @@ const Tours: React.FC = () => {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    // Initial fetch
     fetchTours();
+
+    // Poll every 5 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchTours();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [fetchTours]);
 
   // Apply filters whenever tours or filter states change
@@ -277,6 +294,11 @@ const Tours: React.FC = () => {
     setDeletionRejectionReason('');
   };
 
+  const closeRejectEditModal = () => {
+    setRejectingEditTour(null);
+    setEditRejectionReason('');
+  };
+
   const handleApproveDeletion = async (tourId: string) => {
     if (!window.confirm('Are you sure you want to permanently delete this tour? This action cannot be undone.')) {
       return;
@@ -338,6 +360,70 @@ const Tours: React.FC = () => {
     }
   };
 
+  const handleApproveEdit = async (tourId: string) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${tourId}/approve-edit`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve edit request');
+      }
+
+      // Update local state and refresh counts
+      setTours(tours.map(tour =>
+        tour._id === tourId ? { ...tour, status: 'approved' as const } : tour
+      ));
+      await fetchTourCounts();
+      alert('Edit request approved successfully');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const handleRejectEdit = async (tourId: string) => {
+    if (!editRejectionReason.trim()) {
+      alert('Please provide a reason for rejecting the edit request');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tours/${tourId}/reject-edit`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rejectionReason: editRejectionReason }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reject edit request');
+      }
+
+      // Update local state and refresh counts
+      setTours(tours.map(tour =>
+        tour._id === tourId ? { ...tour, status: 'approved' as const } : tour
+      ));
+      setRejectingEditTour(null);
+      setEditRejectionReason('');
+      await fetchTourCounts();
+      alert('Edit request rejected successfully');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const openRejectEditModal = (tourId: string) => {
+    setRejectingEditTour(tourId);
+    setEditRejectionReason('');
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
@@ -346,6 +432,8 @@ const Tours: React.FC = () => {
         return 'bg-red-100 text-red-800';
       case 'pending_deletion':
         return 'bg-orange-100 text-orange-800';
+      case 'edit_requested':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-yellow-100 text-yellow-800';
     }
@@ -401,6 +489,15 @@ const Tours: React.FC = () => {
             }`}
         >
           Pending Deletion ({tourCounts.pending_deletion})
+        </button>
+        <button
+          onClick={() => setActiveTab('edit_requested')}
+          className={`px-4 py-2 rounded-lg font-medium ${activeTab === 'edit_requested'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+        >
+          Edit Requested ({tourCounts.edit_requested})
         </button>
         <button
           onClick={() => setActiveTab('all')}
@@ -668,6 +765,22 @@ const Tours: React.FC = () => {
                           </button>
                         </div>
                       )}
+                      {tour.status === 'edit_requested' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleApproveEdit(tour._id)}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all"
+                          >
+                            Approve Edit
+                          </button>
+                          <button
+                            onClick={() => openRejectEditModal(tour._id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all"
+                          >
+                            Deny Edit
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -813,6 +926,43 @@ const Tours: React.FC = () => {
                 </button>
                 <button
                   onClick={closeRejectDeletionModal}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Edit Rejection Modal */}
+      {
+        rejectingEditTour && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold mb-4">Reject Edit Request</h2>
+              <p className="mb-4 text-gray-600">
+                Please provide a reason for rejecting this edit request. This will be emailed to the guide.
+              </p>
+              <textarea
+                value={editRejectionReason}
+                onChange={(e) => setEditRejectionReason(e.target.value)}
+                placeholder="Enter rejection reason..."
+                className="w-full p-3 border border-gray-300 rounded-md mb-4 resize-none"
+                rows={4}
+                required
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleRejectEdit(rejectingEditTour)}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex-1"
+                  disabled={!editRejectionReason.trim()}
+                >
+                  Reject Edit
+                </button>
+                <button
+                  onClick={closeRejectEditModal}
                   className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                 >
                   Cancel
@@ -1100,6 +1250,28 @@ const Tours: React.FC = () => {
                         className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-green-100 transition-all"
                       >
                         Reject Deletion
+                      </button>
+                    </>
+                  )}
+                  {selectedTourForDetails.status === 'edit_requested' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleApproveEdit(selectedTourForDetails._id);
+                          setDetailsModalOpen(false);
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-green-100 transition-all"
+                      >
+                        Approve Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          openRejectEditModal(selectedTourForDetails._id);
+                          setDetailsModalOpen(false);
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-100 transition-all"
+                      >
+                        Deny Edit
                       </button>
                     </>
                   )}

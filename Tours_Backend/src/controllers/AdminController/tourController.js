@@ -1,7 +1,8 @@
+import eventEmitter, { EVENTS } from '../../utils/events.js';
+
 import Tour from '../../models/GuidModel/Tour.js';
 import nodemailer from 'nodemailer';
 import { sendEmail } from '../../utils/emailserver.js';
-import eventEmitter, { EVENTS } from '../../utils/events.js';
 
 export const getPendingTours = async (req, res) => {
   try {
@@ -45,6 +46,18 @@ export const getPendingDeletionTours = async (req, res) => {
       .populate('guide', 'name email')
       .sort({ createdAt: -1 });
     res.json({ tours: pendingDeletionTours });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getEditRequestedTours = async (req, res) => {
+  try {
+    const editRequestedTours = await Tour.find({ status: 'edit_requested' })
+      .populate('guide', 'name email')
+      .sort({ createdAt: -1 });
+    res.json({ tours: editRequestedTours });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -269,7 +282,114 @@ export const approveDeletion = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+export const approveEdit = async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    const tour = await Tour.findById(tourId).populate('guide', 'name email');
 
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    if (tour.status !== 'edit_requested') {
+      return res.status(400).json({ message: 'Tour is not requesting edit' });
+    }
+
+    // Update tour status back to approved (allowing edit)
+    await Tour.findByIdAndUpdate(tourId, { status: 'approved' });
+
+    // Send approval email to guide
+    try {
+      const mailOptions = {
+        to: tour.guide.email,
+        subject: 'Tour Edit Request Approved',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #28a745;">Tour Edit Request Approved</h2>
+            <p>Dear ${tour.guide.name},</p>
+            <p>Your request to edit the tour "${tour.title}" has been approved.</p>
+            <p>You can now make changes to your tour. Please note that any modifications will require re-approval from our team.</p>
+            <p>You can edit your tour at: <a href="${process.env.GUID_FRONTEND_URL}/tours">${process.env.GUID_FRONTEND_URL}/tours</a></p>
+            <p>Best regards,<br>Tours Management Team</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send edit approval email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    eventEmitter.emit(EVENTS.TOUR_STATUS_UPDATED, {
+      tourId: tour._id,
+      status: 'approved',
+      guideId: tour.guide._id
+    });
+
+    res.json({ message: 'Tour edit request approved successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const rejectEdit = async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    const { rejectionReason } = req.body;
+
+    if (!rejectionReason || rejectionReason.trim().length === 0) {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+
+    const tour = await Tour.findById(tourId).populate('guide', 'name email');
+
+    if (!tour) return res.status(404).json({ message: 'Tour not found' });
+
+    if (tour.status !== 'edit_requested') {
+      return res.status(400).json({ message: 'Tour is not requesting edit' });
+    }
+
+    // Update tour status back to approved
+    await Tour.findByIdAndUpdate(tourId, { status: 'approved' });
+
+    // Send rejection email to guide
+    try {
+      const mailOptions = {
+        to: tour.guide.email,
+        subject: 'Tour Edit Request Rejected',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Tour Edit Request Rejected</h2>
+            <p>Dear ${tour.guide.name},</p>
+            <p>Your request to edit the tour "${tour.title}" has been reviewed and rejected for the following reason:</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;">
+              <p style="margin: 0; color: #495057;">${rejectionReason}</p>
+            </div>
+            <p>The tour remains active and available for booking. If you believe this decision was made in error, please contact our support team.</p>
+            <p>You can manage your tours at: <a href="${process.env.GUID_FRONTEND_URL}/tours">${process.env.GUID_FRONTEND_URL}/tours</a></p>
+            <p>Best regards,<br>Tours Management Team</p>
+          </div>
+        `,
+      };
+
+      await sendEmail(mailOptions);
+    } catch (emailError) {
+      console.error('Failed to send edit rejection email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    eventEmitter.emit(EVENTS.TOUR_STATUS_UPDATED, {
+      tourId: tour._id,
+      status: 'approved',
+      guideId: tour.guide._id
+    });
+
+    res.json({ message: 'Tour edit request rejected successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 export const rejectDeletion = async (req, res) => {
   try {
     const { tourId } = req.params;

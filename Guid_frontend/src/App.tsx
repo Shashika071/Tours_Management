@@ -1,6 +1,7 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router";
 import { Suspense, lazy } from "react";
 
+import AddOffer from "./pages/Offers/AddOffer";
 import Alerts from "./pages/UiElements/Alerts";
 import AllTours from "./pages/GuideDashboard/AllTours";
 import AppLayout from "./layout/AppLayout";
@@ -11,6 +12,7 @@ import BasicTables from "./pages/Tables/BasicTables";
 import Blank from "./pages/Blank";
 import Buttons from "./pages/UiElements/Buttons";
 import Calendar from "./pages/Calendar";
+import CreatePromotionRequest from "./pages/Promotions/CreatePromotionRequest";
 import CreateTour from "./pages/GuideDashboard/CreateTour";
 import EditTour from "./pages/GuideDashboard/EditTour";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
@@ -19,23 +21,22 @@ import GeneralSettings from "./pages/Settings/GeneralSettings";
 import GuideDashboard from "./pages/GuideDashboard/GuideDashboard";
 import Images from "./pages/UiElements/Images";
 import LineChart from "./pages/Charts/LineChart";
+import ManageOffers from "./pages/Offers/ManageOffers";
 import NotFound from "./pages/OtherPage/NotFound";
 import PaymentSettings from "./pages/Settings/PaymentSettings";
 import PlaceholderPage from "./components/common/PlaceholderPage";
+import PromoteTours from "./pages/Promotions/PromoteTours";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
-import PromoteTours from "./pages/Promotions/PromoteTours";
-import CreatePromotionRequest from "./pages/Promotions/CreatePromotionRequest";
-import AddOffer from "./pages/Offers/AddOffer";
-import ManageOffers from "./pages/Offers/ManageOffers";
 
 // Lazy load new bid components
 const AddBidTour = lazy(() => import('./pages/GuideDashboard/AddBidTour'));
 const ManageBidTours = lazy(() => import('./pages/GuideDashboard/ManageBidTours'));
+const EditBidTour = lazy(() => import('./pages/GuideDashboard/EditBidTour'));
 
 export default function App() {
   return (
@@ -56,6 +57,7 @@ export default function App() {
 
             {/* Bid Tours */}
             <Route path="/tours/bid/add" element={<AddBidTour />} />
+            <Route path="/tours/bid/edit/:tourId" element={<EditBidTour />} />
             <Route path="/tours/bid/manage" element={<ManageBidTours />} />
 
             <Route path="/tours/categories" element={<PlaceholderPage title="Tour Categories" description="Organize tours by categories and types." />} />

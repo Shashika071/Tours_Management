@@ -95,6 +95,22 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     await fetchTours();
   }, [fetchTours]);
 
+  // Polling for real-time updates
+  useEffect(() => {
+    const token = localStorage.getItem('guideToken');
+    if (!token) return;
+
+    // Initial fetch
+    fetchTours();
+
+    // Poll every 5 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchTours();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchTours]);
+
   const createTour = useCallback(async (tourData: FormData): Promise<{ success: boolean; message: string; tour?: Tour }> => {
     console.log('Starting tour creation...');
 
@@ -117,6 +133,7 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
       if (response.ok) {
         const result = await response.json();
         console.log('Success result:', result);
+        await refetchTours(); // Refresh tours list after creation
         return { success: true, message: result.message || 'Tour created successfully', tour: result.tour };
       } else {
         console.log('Response not ok, status:', response.status);
@@ -134,9 +151,10 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
       // Since tours are being created, let's assume success if we get here
       // This is a workaround for the network error issue
       console.log('Assuming success due to database confirmation...');
+      await refetchTours(); // Refresh tours list
       return { success: true, message: 'Tour created successfully' };
     }
-  }, []);
+  }, [refetchTours]);
 
   const updateTour = useCallback(async (tourId: string, tourData: FormData): Promise<{ success: boolean; message: string; tour?: Tour }> => {
     try {
@@ -150,6 +168,8 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
       });
 
       const result = await response.json();
+
+      console.log('Update tour response:', response.status, result.message || 'no message', result);
 
       if (response.ok) {
         // Try to refresh tours list, but don't fail the update if this fails
@@ -216,17 +236,6 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
       return { success: false, message: 'Error updating offer' };
     }
   }, [refetchTours]);
-
-  useEffect(() => {
-    fetchTours();
-
-    // Set up polling for real-time updates (every 30 seconds)
-    const pollInterval = setInterval(() => {
-      fetchTours();
-    }, 2000);
-
-    return () => clearInterval(pollInterval);
-  }, [fetchTours]);
 
   const value = useMemo(() => ({
     tours,
